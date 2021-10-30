@@ -1,3 +1,3 @@
-# psipkg
+# xipkg
 
-The package management system for psi linux
+The package management system for xilinux
