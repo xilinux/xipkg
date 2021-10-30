@@ -1,0 +1,21 @@
+def esc(code):
+    return f'\033[{code}m'
+
+RESET           = esc(0)
+BLACK           = esc(30)
+RED             = esc(31)
+GREEN           = esc(32)
+YELLOW          = esc(33)
+BLUE            = esc(34)
+MAGENTA         = esc(35)
+CYAN            = esc(36)
+WHITE           = esc(37)
+DEFAULT         = esc(39)
+LIGHT_BLACK     = esc(90)
+LIGHT_RED       = esc(91)
+LIGHT_GREEN     = esc(92)
+LIGHT_YELLOW    = esc(93)
+LIGHT_BLUE      = esc(94)
+LIGHT_MAGENTA   = esc(95)
+LIGHT_CYAN      = esc(96)
+LIGHT_WHITE     = esc(97)
