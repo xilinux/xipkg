@@ -1,0 +1,141 @@
+/etc/xi/xipkg.conf
+    for xipkg config
+
+in config define repo sources like this:
+    <source name>: <url or filepath>
+
+eg:
+    davidovski: https://xi.davidovski.xyz/repo/
+
+
+then specify repos that should be loaded:
+    repos: core extra other
+
+/var/lib/xipkg
+    to contain all working files:
+
+/var/lib/xipkg/packages
+    "working dir" to keep xipkg files and xipkg.info
+    will look something like this:
+        packages/
+                    core/
+                    extra/
+
+
+/var/lib/xipkg/keychain
+place to store publickeys for sources.
+
+/var/lib/xipkg/installed/<pkg name>
+                                    /info       - info about the package that has been installed to the system
+                                    /files      - text file with all the files that it installed to the sysetm (for later removal purposes)
+
+
+sync
+-------
+download all xipkg.info and keys from repos, done before all other commands
+
+just go to each source
+and each repo
+one by one take each xipkg.info
+temporarily save each xipkg.info somewhere, per source
+
+find the latest xipkg.info and get the VER_HASH for that build
+find all of the xipkg.info with that VER_HASH and compare their checksums
+the most common CHECKSUM will win, so place that xipkg.info in the correct place
+
+? maybe make a warning about any sources that have outdated / different CHECKSUMS for that version hash (possibly malicious?)
+
+A database should be made:
+
+Packages:
+    [name (String), repo (String)]
+
+Sources:
+    [name (String)], url (String)
+
+PackageSources:
+    package (String), repo (String), source (String)
+
+This database should solve the problem of of which package infos come from which sources
+
+
+???
+File:
+    path (String), package (String), repo (String)
+???
+
+install
+-------
+
+if a xipkg file is specified and there is a corresponding .info as well, it will install it directly
+if its a url, then download the xipkg file and its .info
+
+if its a package name:
+    check if it exists,
+    if that package name exists in multiple repos, then prompt to ask which repo to take from 
+
+to check a package is already installed, search for its name in /var/lib/xipkg/installed
+
+to install package need to:
+    - find the package in a place in /var/lib/xipkg/packages 
+    - find all dependencies and subdependecies in a tree, and repeat install for any that are missing
+
+    - aquire .xipkg from correct source (look for the xipkg.info.source)
+
+    - verify that the hash of xipkg is right
+
+    - check against every publickey in /var/lib/xipkg/keychain (maybe better ideas?)
+
+    - untar the xipkg
+    - list all package's files in xipkg into /var/lib/xipkg/installed/<pkg name>/files
+    - copy the pkginfo to /var/lib/xipkg/installed/<pkg name> 
+            ( do not use a symlink since later syncs can make the information inacurate)
+    - copy all the files into their place on the system
+            (actually install the package)
+        
+    - make an install reciept that contains:
+        * the source that the package was downloaded from
+        * the key that was used to validate the package
+        * the date the package was installed
+        * the user that installed the package
+        * if the package was installed as a dependency
+        * other info?
+
+    - ?? run some post install scripts??
+    - ?? clean up??
+
+remove
+------
+
+find the package's installed files in /var/lib/xipkg/installed/<pkg name>/files and remove them from the system
+(? maybe check if other packages need them, and dont remove then?)
+
+remove all the info from /var/lib/xipkg/installed/<pkg name>
+
+(? check )
+    
+upgrade
+-------
+do a sync
+if a package is specified, only upgrade that one package
+
+create a dependency tree and try upgrade core packages first (shouldnt matter really, since upgrading shouldnt have any dependencies other than xipkg and its subdependencies)
+
+to upgrade a package find that package in the repo and compare its pkginfo with the installed's package info
+
+if the VERSION_HASH is different then upgrade (guessing newer)
+if the CHECKSUM is different AND the date is newer then upgrade (a different checksum with an older date could be a mistake)
+
+(cant rely only on version hash, because the way that the package was built can be changed)
+
+
+force-upgrade
+------------
+(! needs a better name)
+
+just removes the package and then installs it again
+
+file
+------
+searches for a file to install
+(!!! REQUIRES SOME KIND OF FILE DATABASE)
