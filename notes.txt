@@ -1,4 +1,4 @@
-/etc/xi/xipkg.conf
+/etc/xipkg.conf
     for xipkg config
 
 in config define repo sources like this:

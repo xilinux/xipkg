@@ -1,21 +1,20 @@
 import options
+import config
 
-def search(terms):
-    print(f"searching for {terms}")
+def search():
     pass
-
-def install(terms):
-    print(f"installing for {terms}")
+def install():
     pass
-
-def remove(terms):
-    print(f"removing for {terms}")
+def remove():
+    pass
+def sync():
     pass
 
 verbs = { v: globals()[v] for v in [
                 "search",
-                "install"
-                "remove"
+                "install",
+                "remove",
+                "sync"
             ]
         }
 
@@ -27,6 +26,7 @@ def main():
         options.print_usage()
         return
 
+    conf = config.parse_file(opts["c"])
     if len(args) > 0:
         verb = args[0].lower()
         (

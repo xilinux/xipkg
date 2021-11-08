@@ -5,7 +5,7 @@ options = {
                 "name": "help",
                 "flag" : True,
                 "desc" : "prints the command usage and exists the program",
-            }
+            },
         "y" : {
                 "name" : "no-confirm",
                 "flag" : True,
@@ -21,6 +21,12 @@ options = {
                 "name" : "no-sync",
                 "flag" : True,
                 "desc" : "skip syncing with repo sources (not recommended)"
+            },
+        "c": {
+                "name" : "config",
+                "flag" : False,
+                "desc" : "specify the configuration file to use",
+                "default" : "/etc/xipkg.conf"
             }
         }
 
