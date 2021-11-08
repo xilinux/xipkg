@@ -1,13 +1,13 @@
 import options
 import config
 
+from verbs.sync import sync
+
 def search():
     pass
 def install():
     pass
 def remove():
-    pass
-def sync():
     pass
 
 verbs = { v: globals()[v] for v in [
@@ -32,7 +32,7 @@ def main():
         (
             verbs[verb] if verb in verbs else search
         )(
-            args[1:] if len(args) > 1 else []
+            args[1:] if len(args) > 1 else [],  conf
         )
     else:
         options.print_usage()
