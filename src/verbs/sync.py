@@ -84,9 +84,3 @@ def sync(args, options, config):
         num_packages = len(validated)
         util.loading_bar(num_packages, num_packages, f"Synced {repo}")
         print(colors.RESET)
-
-            
-            
-            
-
-    print("Synced!")
