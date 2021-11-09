@@ -72,9 +72,9 @@ def _parse_line(line, config_file):
     if line[0] == "#":
         return {}
     else:
-        split = line.split(" ")
+        split = line.split()
         key = split[0]
-        value = " " if len(split) == 1 else " ".join(line.split(" ")[1:])
+        value = " " if len(split) == 1 else " ".join(split[1:])
 
         # if starting with include, then include another file in the same config
         if key == "include":
