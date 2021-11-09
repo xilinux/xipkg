@@ -78,7 +78,7 @@ def _parse_line(line, config_file):
 
         # if starting with include, then include another file in the same config
         if key == "include":
-            included = parse_conf(value)
+            included = parse_file(value)
             return included
         elif value[-1].endswith("{"):
             return {key: _parse_config(config_file)}

@@ -32,7 +32,7 @@ def main():
         (
             verbs[verb] if verb in verbs else search
         )(
-            args[1:] if len(args) > 1 else [],  conf
+            args[1:] if len(args) > 1 else [], opts, conf
         )
     else:
         options.print_usage()

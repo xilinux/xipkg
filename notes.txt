@@ -32,37 +32,12 @@ place to store publickeys for sources.
 
 sync
 -------
-download all xipkg.info and keys from repos, done before all other commands
 
-just go to each source
-and each repo
-one by one take each xipkg.info
-temporarily save each xipkg.info somewhere, per source
-
-find the latest xipkg.info and get the VER_HASH for that build
-find all of the xipkg.info with that VER_HASH and compare their checksums
-the most common CHECKSUM will win, so place that xipkg.info in the correct place
-
-? maybe make a warning about any sources that have outdated / different CHECKSUMS for that version hash (possibly malicious?)
-
-A database should be made:
-
-Packages:
-    [name (String), repo (String)]
-
-Sources:
-    [name (String)], url (String)
-
-PackageSources:
-    package (String), repo (String), source (String)
-
-This database should solve the problem of of which package infos come from which sources
+go to each source and list packages in a repo
+find the most popular package hashes
 
 
-???
-File:
-    path (String), package (String), repo (String)
-???
+download all keys
 
 install
 -------
@@ -118,6 +93,8 @@ upgrade
 -------
 do a sync
 if a package is specified, only upgrade that one package
+
+packages need updates when the hash listed in the package sync is different to the installed
 
 create a dependency tree and try upgrade core packages first (shouldnt matter really, since upgrading shouldnt have any dependencies other than xipkg and its subdependencies)
 

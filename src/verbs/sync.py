@@ -1,61 +1,92 @@
 import os
-import requests
+import util
+import colors
+import time
 
-TEMP_DIR = "/tmp/xipkg"
+CACHE_DIR = "/var/cache/xipkg"
 
-def curl(url):
-    r = requests.get(url)
-    return r.status_code, r.text
-
-def mkdir(path):
-    if not os.path.exists(path):
-        os.makedirs(path)
-
-def download_repo(output, url):
-    pkg_list_url = url + "/packages.txt"
-
-    status, response = curl(pkg_list_url)
-    if status == 404:
-        print("repo does not exist at", pkg_list_url)
+def list_packages(url):
+    status, response = util.curl(url + "/packages.list")
+    if status != 200:
+        return {}
     else:
-        packages = response.split("\n")
-        for package in packages:
-            if len(package) > 0:
-                pkg_url = url + "/" + package
-                status, package_info = curl(pkg_url)
-
-                if status == 200:
-                    with open(os.path.join(output, package), "w") as file:
-                        file.write(package_info)
-                else:
-                    print("package is missing at", pkg_url)
-
-# have separate list and download methods for each scheme
-def sync_package_infos(source_name, url, repos):
-
-    source_dir = os.path.join(TEMP_DIR, source_name)
-
-    scheme = url.split(":")[0]
-    
-    print(url)
-    # TODO: add ftp
-    if scheme.startswith("http"):
-        sync_func = download_repo
-    else:
-        # Assume its a location on the file system
-        sync_func = copy_repo
-
-    for repo in repos:
-        out = os.path.join(TEMP_DIR, repo)
-        mkdir(out)
-        sync_func(out, url + repo if url[-1] == "/" else f"/{repo}")
-
+        return {
+                line.split()[0].split(".")[0]: line.split()[1]
+                for line in response.split("\n") if len(line.split()) >  0
+                }
         
-def sync(options, config):
+def sync_packages(repo, sources):
+    packages = {}
+    total = 0
+    completed = 0
+    for source,url in sources.items():
+
+        listed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
+        total += len(listed)
+        for p in listed:
+            if not p in packages:
+                packages[p] = []
+
+            packages[p].append((listed[p], source))
+            completed += 1
+            util.loading_bar(completed, total, f"Syncing {repo}")
+    return packages
+
+def validate_packages(packages, repo):
+    output = {}
+    completed = 0
+    total = len(packages)
+    for package, versions in packages.items():
+        popularity = {}
+        for v in versions:
+            checksum = v[0]
+            source = v[1]
+            if not checksum in popularity:
+                popularity[checksum] = 0
+            popularity[checksum] += 1
+
+        most_popular = sorted(popularity)[0]
+        
+        # change the packages dict to list all the sources
+        output[package] = {
+                "checksum": most_popular,
+                "sources" : [v[1] for v in versions if v[0] == most_popular]
+                }
+        completed += 1
+        util.loading_bar(completed, total, f"Validating {repo}")
+    return output
+
+def save_package_list(validated, location):
+    util.mkdir(location)
+    for package,info in validated.items():
+        package_file = os.path.join(location, package)
+        
+        content = ""
+        with open(package_file, "w") as file:
+            file.write("checksum=" + info["checksum"] + "\n")
+            file.write("sources=" + " ".join([source for source in info["sources"]]))
+
+    
+
+
+def sync(args, options, config):
     sources = config["sources"]
     repos = config["repos"]
 
-    mkdir(TEMP_DIR)
-    for source, url in sources.items():
-        sync_package_infos(source, url, repos)
+    for repo in repos:
+        packages = sync_packages(repo, sources)
+        
+        # find the most popular hash to use
+        validated = validate_packages(packages, repo)
+
+        save_package_list(validated, os.path.join(config["dir"]["packages"], repo))
+
+        num_packages = len(validated)
+        util.loading_bar(num_packages, num_packages, f"Synced {repo}")
+        print(colors.RESET)
+
+            
+            
+            
+
     print("Synced!")

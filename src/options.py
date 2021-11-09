@@ -22,6 +22,11 @@ options = {
                 "flag" : True,
                 "desc" : "skip syncing with repo sources (not recommended)"
             },
+        "v": {
+                "name" : "verbose",
+                "flag" : True,
+                "desc" : "print more"
+            },
         "c": {
                 "name" : "config",
                 "flag" : False,
