@@ -7,6 +7,9 @@ import os
 DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_CYAN
 DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
 
+def add_path(a, b):
+    return a + (b if a[-1] == "/" else f"/{b}")
+
 def loading_bar(completed, total, text, 
         unit="", color=DEFAULT_BAR_COLOR, reset=DEFAULT_BAR_COLOR_RESET):
 
