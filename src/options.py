@@ -22,6 +22,11 @@ options = {
                 "flag" : True,
                 "desc" : "skip syncing with repo sources (not recommended)"
             },
+        "u": {
+                "name" : "unsafe",
+                "flag" : True,
+                "desc" : "skip any checksum or signature verification"
+                }
         "v": {
                 "name" : "verbose",
                 "flag" : True,

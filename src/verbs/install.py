@@ -33,7 +33,9 @@ def retrieve_package_info(sources, checksum, package_name,
                 return info
             else:
                 if verbose:
-                    print(colors.RED + f"Checksum verification failed for {package_name} in {source}" + colors.RESET)
+                    print(colors.RED 
+                            + f"Checksum verification failed for {package_name} in {source}" 
+                            + colors.RESET)
     if verbose:
         print(colors.RED + f"No matching hashes found" + colors.RESET)
     return {}
@@ -53,18 +55,25 @@ def install(args, options, config):
     repos = config["repos"]
 
     v = options["v"]
+    unsafe = options["u"]
 
     packages_dir = config["dir"]["packages"]
     for query in args:
 
         # FIRST CHECK IF ALREADY INSTALLED
-
         checksum, listed_sources, repo = find_package(query, repos, packages_dir)
 
         if checksum is not None:
-            repo_sources = {source: util.add_path(url, repo) for source, url in sources.items() if source in listed_sources}
+            repo_sources = {
+                        source: util.add_path(url, repo) 
+                        for source, url in sources.items() 
+                        if source in listed_sources
+                    }
 
-            info = retrieve_package_info(repo_sources, checksum, query, verbose=v)
+            info = retrieve_package_info(
+                        repo_sources, checksum, query,
+                        verbose=v, skip_verification=unsafe
+                    )
 
             print(info)
         else:
