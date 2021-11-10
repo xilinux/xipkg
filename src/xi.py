@@ -2,10 +2,9 @@ import options
 import config
 
 from verbs.sync import sync
+from verbs.install import install
 
 def search():
-    pass
-def install():
     pass
 def remove():
     pass
