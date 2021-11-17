@@ -103,7 +103,7 @@ def test_sources(sources, file_path, test_count=10):
                 total += test_source(source, url)
                 util.loading_bar(checked, len(sources) * test_count, f"Pinging Sources")
                 checked += 1
-            pings[source] = total / test_count if total > 0 else 0
+            pings[source] = int(total / test_count) if total > 0 else 0
 
 
         sorted(pings, reverse=True)
