@@ -22,8 +22,26 @@ def find_package(query, repos, packages_dir):
 
     return None, [], None
 
-
 def retrieve_package_info(sources, checksum, package_name, 
+                            verbose=False, skip_verification=False):
+    for source,url in sources.items():
+        package_info_url = util.add_path(url, package_name + ".xipkg.info")
+        status, response = util.curl(package_info_url)
+   
+        if status == 200:
+            info = parse_package_info(response)
+            if info["CHECKSUM"] == checksum or skip_verification:
+                return info
+            else:
+                if verbose:
+                    print(colors.RED 
+                            + f"Checksum verification failed for {package_name} in {source}" 
+                            + colors.RESET)
+    if verbose:
+        print(colors.RED + f"No matching hashes found" + colors.RESET)
+    return {}
+
+def retrieve_package(sources, checksum, package_name, 
                             verbose=False, skip_verification=False):
     for source,url in sources.items():
         package_info_url = util.add_path(url, package_name + ".xipkg.info")
@@ -51,12 +69,9 @@ def parse_package_info(packageinfo):
             info[split[0]] = "=".join(split[1:])
     return info
 
-
 def resolve_dependencies(package_info):
     getpkgs = lambda deps: re.findall("[\(\s](\w)[\)\s]")
     package_info[""]
-
-
 
 def install(args, options, config):
     sources = config["sources"]

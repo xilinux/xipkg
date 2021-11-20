@@ -86,11 +86,43 @@ def import_key(source, url, verbose=False):
     elif verbose:
         print(colors.BG_RED + f"" + colors.RESET)
 
+
+def test_source(source, url):
+    start = time.time()
+    util.curl(util.add_path(url, "index.html"))
+    duration = time.time() - start
+    return int(duration * 1000)
+
+def test_sources(sources, file_path, test_count=10):
+    if test_count > 0:
+        pings = {}
+        checked = 0
+        for source,url in sources.items():
+            total = 0
+            for i in range(test_count):
+                total += test_source(source, url)
+                util.loading_bar(checked, len(sources) * test_count, f"Pinging Sources")
+                checked += 1
+            pings[source] = int(total / test_count) if total > 0 else 0
+
+
+        sorted(pings, reverse=True)
+        
+        with open(file_path, "w") as file:
+            for source,ping in pings.items():
+                file.write(f"{source} {ping}\n")
+
+        util.loading_bar(checked, len(sources) * test_count, f"Pinged Sources")
+        print()
+
+
 def sync(args, options, config):
     sources = config["sources"]
     repos = config["repos"]
 
     v = options["v"]
+
+    test_sources(sources, config["dir"]["sources"], test_count=int(config["pings"]))
 
     for repo in repos:
         packages = sync_packages(repo, sources, verbose=v)
@@ -103,7 +135,7 @@ def sync(args, options, config):
         num_packages = len(validated)
         util.loading_bar(num_packages, num_packages, f"Synced {repo}")
         print(colors.RESET)
-
+    
 
     #total = len(sources)
     #completed = 0

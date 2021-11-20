@@ -26,7 +26,7 @@ options = {
                 "name" : "unsafe",
                 "flag" : True,
                 "desc" : "skip any checksum or signature verification"
-                }
+                },
         "v": {
                 "name" : "verbose",
                 "flag" : True,
