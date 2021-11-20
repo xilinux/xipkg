@@ -29,3 +29,5 @@ BG_MAGENTA         = esc(45)
 BG_CYAN            = esc(46)
 BG_WHITE           = esc(47)
 BG_DEFAULT         = esc(49)
+
+CLEAR_LINE         = "\033[K"

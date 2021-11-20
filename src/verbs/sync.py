@@ -24,6 +24,7 @@ def sync_packages(repo, sources, verbose=False):
         listed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
         if len(listed) == 0 and verbose:
             print(colors.BG_RED + f"No packages found in {source}/{repo}" + colors.RESET)
+
         total += len(listed)
         for p in listed:
             if not p in packages:
@@ -67,6 +68,7 @@ def save_package_list(validated, location):
         with open(package_file, "w") as file:
             file.write("checksum=" + info["checksum"] + "\n")
             file.write("sources=" + " ".join([source for source in info["sources"]]))
+            file.write("deps=" + " ".join([source for source in info["sources"]]))
 
 
 ###### !!! #######

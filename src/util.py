@@ -3,6 +3,7 @@ import requests
 import colors
 import time
 import os
+import hashlib
 
 DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_CYAN
 DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
@@ -25,8 +26,8 @@ def loading_bar(completed, total, text,
 
     print(color + info, end="\r")
 
-
-
+def print_reset(text):
+    print(colors.RESET + text)
 
 def curl(url):
     r = requests.get(url)
@@ -35,6 +36,21 @@ def curl(url):
 def mkdir(path):
     if not os.path.exists(path):
         os.makedirs(path)
+
+def md5sum(data):
+    return hashlib.md5(data)
+
+def ask_confirmation(text, default=True, no_confirm=False):
+    yes = "Y" if default else "y"
+    no = "n" if default else "N"
+
+    if no_confirm:
+        reponse = "y" if default else "n"
+        print(f"{text} [{yes},{no}] {colors.RESET} {reponse}")
+    else:
+        reponse = input(f"{text} [{yes},{no}] " + colors.RESET)
+
+    return reponse.lower() == "y" or len(reponse) == 0 
 
 if __name__ == "__main__":
     for i in range(1000):

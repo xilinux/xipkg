@@ -27,6 +27,11 @@ options = {
                 "flag" : True,
                 "desc" : "skip any checksum or signature verification"
                 },
+        "n": {
+                "name" : "no-deps",
+                "flag" : True,
+                "desc" : "do not resolve dependencies"
+                },
         "v": {
                 "name" : "verbose",
                 "flag" : True,
