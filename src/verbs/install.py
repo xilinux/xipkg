@@ -131,6 +131,7 @@ def find_all_dependencies(package_names, options, config):
     return all_deps
 
 def is_installed(package_name, config):
+    # TODO only check that the requested checksum is installed.. if not then its a new update or something
     # TODO actually find out if its installed
     return False
 
