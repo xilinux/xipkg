@@ -1,4 +1,5 @@
 import os
+import re
 import util
 import colors
 import time
@@ -18,6 +19,7 @@ def find_package(query, repos, packages_dir):
                 checksum = file.readline().strip().split("=")[-1]
                 sources = file.readline().strip().split("=")[-1].split()
                 return checksum, sources, requested_repo
+
     return None, [], None
 
 
@@ -50,6 +52,12 @@ def parse_package_info(packageinfo):
     return info
 
 
+def resolve_dependencies(package_info):
+    getpkgs = lambda deps: re.findall("[\(\s](\w)[\)\s]")
+    package_info[""]
+
+
+
 def install(args, options, config):
     sources = config["sources"]
     repos = config["repos"]
@@ -60,18 +68,16 @@ def install(args, options, config):
     packages_dir = config["dir"]["packages"]
     for query in args:
 
-        # FIRST CHECK IF ALREADY INSTALLED
+        # TODO FIRST CHECK IF ALREADY INSTALLED
         checksum, listed_sources, repo = find_package(query, repos, packages_dir)
 
         if checksum is not None:
-            repo_sources = {
+            info = retrieve_package_info(
+                        {
                         source: util.add_path(url, repo) 
                         for source, url in sources.items() 
                         if source in listed_sources
-                    }
-
-            info = retrieve_package_info(
-                        repo_sources, checksum, query,
+                    }, checksum, query,
                         verbose=v, skip_verification=unsafe
                     )
 
