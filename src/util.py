@@ -45,11 +45,13 @@ def get_unit(n):
     elif n > base**3: return base**3, "GB"
     elif n > base**2: return base**2, "MB"
     elif n > base**1: return base**1, "KB"
+    else: return 1, "B"
 
 def curl_to_file(url, path, text=""):
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        length = int(r.headers['content-length'])
+
+        length = int(r.headers['content-length']) if "content-length" in r.headers else 1000
         with open(path, "wb") as f:
 
             c_size = 4096
@@ -66,7 +68,6 @@ def curl_to_file(url, path, text=""):
         if text:
             divisor, unit = get_unit(length)
             loading_bar(int(done/divisor), int(length/divisor), "Downloaded " + text, unit=unit)
-        print(colors.RESET)
 
         return r.status_code, path
 

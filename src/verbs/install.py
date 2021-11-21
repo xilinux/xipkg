@@ -106,6 +106,8 @@ def retrieve_package(sources, package_info, package_name, config,
 
     for source in get_best_source(sources_list=sources_list):
         url = sources[source]
+        if verbose:
+            print(colors.LIGHT_BLACK + f"using source {source} at {url}")
         package_url = util.add_path(url, package_name + ".xipkg")
         package_dir = util.add_path(cache_dir, source)
 
@@ -120,6 +122,7 @@ def retrieve_package(sources, package_info, package_name, config,
 
                     if verify_signature(package_path, package_info, 
                             cache_dir=cache_dir, keychain_dir=keychain_dir, verbose=verbose):
+                        print(colors.RESET)
                         return package_path
                     elif verbose:
                         print(colors.RED 
@@ -130,9 +133,9 @@ def retrieve_package(sources, package_info, package_name, config,
                                 + f"Checksum verification failed for {package_name} in {source}" 
                                 + colors.RESET)
             else:
+                print(colors.RESET)
                 return package_path
-    if verbose:
-        print(colors.RED + f"No valid packages found" + colors.RESET)
+    print(colors.RESET + colors.RED + f"No valid packages found for {package_name}" + colors.RESET)
     return ""
 
 def parse_package_info(packageinfo):
