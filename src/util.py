@@ -30,7 +30,10 @@ def print_reset(text):
     print(colors.RESET + text)
 
 def curl(url):
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except:
+        return 500, ""
     return r.status_code, r.text
 
 def mkdir(path):

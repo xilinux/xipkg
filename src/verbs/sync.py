@@ -6,22 +6,31 @@ import time
 CACHE_DIR = "/var/cache/xipkg"
 
 def list_packages(url):
+    start = time.time()
     status, response = util.curl(url + "/packages.list")
+    duration = (time.time() - start) * 1000
     if status != 200:
-        return {}
+        return {}, -1
     else:
+        duration /= len(response)
         return {
                 line.split()[0].split(".")[0]: line.split()[1]
                 for line in response.split("\n") if len(line.split()) >  0
-                }
+                }, duration
         
 def sync_packages(repo, sources, verbose=False):
     packages = {}
     total = 0
     completed = 0
+
+    speeds = {}
     for source,url in sources.items():
 
-        listed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
+        listed, speed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
+
+        if speed > 0:
+            speeds[source] = speed
+
         if len(listed) == 0 and verbose:
             print(colors.BG_RED + f"No packages found in {source}/{repo}" + colors.RESET)
 
@@ -33,7 +42,8 @@ def sync_packages(repo, sources, verbose=False):
             packages[p].append((listed[p], source))
             completed += 1
             util.loading_bar(completed, total, f"Syncing {repo}")
-    return packages
+
+    return packages, speeds
 
 def validate_packages(packages, repo, verbose=False):
     output = {}
@@ -68,7 +78,6 @@ def save_package_list(validated, location):
         with open(package_file, "w") as file:
             file.write("checksum=" + info["checksum"] + "\n")
             file.write("sources=" + " ".join([source for source in info["sources"]]))
-            file.write("deps=" + " ".join([source for source in info["sources"]]))
 
 
 ###### !!! #######
@@ -90,10 +99,13 @@ def import_key(source, url, verbose=False):
 
 
 def test_source(source, url):
+    # requesting a resource may not be the best way to do this, caching etc
     start = time.time()
-    util.curl(util.add_path(url, "index.html"))
-    duration = time.time() - start
-    return int(duration * 1000)
+    code, reponse = util.curl(util.add_path(url, "index.html"))
+    if code == 200:
+        return int((time.time() - start) * 1000)
+    else:
+        return -1
 
 def test_sources(sources, file_path, test_count=10):
     if test_count > 0:
@@ -105,10 +117,11 @@ def test_sources(sources, file_path, test_count=10):
                 total += test_source(source, url)
                 util.loading_bar(checked, len(sources) * test_count, f"Pinging Sources")
                 checked += 1
-            pings[source] = int(total / test_count) if total > 0 else 0
+            if total > 0:
+                pings[source] = int(total / test_count) if total > 0 else 0
 
 
-        sorted(pings, reverse=True)
+        sorted(pings)
         
         with open(file_path, "w") as file:
             for source,ping in pings.items():
@@ -124,10 +137,15 @@ def sync(args, options, config):
 
     v = options["v"]
 
-    test_sources(sources, config["dir"]["sources"], test_count=int(config["pings"]))
-
+    # test_sources(sources, config["dir"]["sources"], test_count=int(config["pings"]))
+    
     for repo in repos:
-        packages = sync_packages(repo, sources, verbose=v)
+        packages, speeds = sync_packages(repo, sources, verbose=v)
+        
+        sorted(speeds)
+        with open(config["dir"]["sources"], "w") as file:
+            for source,ping in speeds.items():
+                file.write(f"{source} {ping}\n")
         
         # find the most popular hash to use
         validated = validate_packages(packages, repo, verbose=v)
