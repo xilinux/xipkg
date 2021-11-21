@@ -11,7 +11,7 @@ DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
 def add_path(*argv):
     a = argv[0]
     for b in argv[1:]:
-        a = a + (b if a[-1] == "/" else f"/{b}")
+        a = a + ("" if a[-1] == "/"  else "/") + (b[1:] if b[0] == "/" else b)
     return a
 
 def loading_bar(completed, total, text, 

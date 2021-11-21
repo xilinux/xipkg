@@ -72,7 +72,6 @@ def retrieve_package_info(sources, checksum, package_name, config,
     cache_dir=config["dir"]["cache"]
     
     # TODO we may potentially do this a few times while resolving deps, might want to cache things here
-    # TODO actually use the ping times we made earlier to decide which source to pick
     for source in get_best_source(sources_list=sources_list):
         url = sources[source]
 
@@ -98,10 +97,7 @@ def retrieve_package(sources, package_info, package_name, config,
     sources_list=config["dir"]["sources"]
     cache_dir=config["dir"]["cache"]
     keychain_dir=config["dir"]["keychain"]
-
-    # TODO actually use the ping times we made earlier to decide which source to pick
-    # TODO actually save tar file, and add loading bar
-
+    
     checksum = package_info["CHECKSUM"]
 
     for source in get_best_source(sources_list=sources_list):
@@ -189,7 +185,7 @@ def find_all_dependencies(package_names, options, config):
                     deps = resolve_dependencies(info)
                     for dep in deps:
                         if not dep in all_deps:
-                            if is_installed(dep, config):
+                            if is_installed(dep, config, options["r"]):
                                 print(colors.YELLOW + f"Package {query} has already been installed")
                             else:
                                 to_check.append(dep)
@@ -208,10 +204,19 @@ def find_all_dependencies(package_names, options, config):
     all_deps.reverse()
     return all_deps
 
-def is_installed(package_name, config):
-    # TODO only check that the requested checksum is installed.. if not then its a new update or something
-    # TODO actually find out if its installed
+def is_installed(package_name, config, root="/"):
+    installed_dir = util.add_path(root, config["dir"]["installed"])
+    if os.path.exists(installed_dir):
+        files = os.listdir(installed_dir)
+        return package_name in files
     return False
+
+def install_package(package_path, package_info, config, root="/"):
+    # untar and move into root
+    # then add entry in the config["dir"]["installed"]
+
+    pass
+
 
 def install(args, options, config):
     sources = config["sources"]
