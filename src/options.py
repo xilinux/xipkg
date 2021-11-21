@@ -61,27 +61,32 @@ def parse_args():
         arg = args[index]
 
         if len(arg) > 1 and arg[0] == "-":
-            option = None
+            option = []
 
             # is a named argument with a --
             if arg[1] == "-" and len(arg) > 2 and arg[2:].split("=")[0] in names:
-                option = names[arg[2:].split("=")[0]]
+                option.appen(names[arg[2:].split("=")[0]])
             # is a single letter argument with a -
-            elif arg[1] in options:
-                option = arg[1]
             else:
-                parsed["args"].append(arg)
+                for letter in arg[1:]:
+                    if letter in options:
+                        option.append(letter)
+
+                if len(option) == 0:
+                    parsed["args"].append(arg)
+
 
             # add the option and any values ot the parsed dict
-            if option is not None:
-                if options[option]["flag"]:
-                    parsed[option] = True
-                else:
-                    if "=" in arg:
-                        parsed[option] = arg.split("=")[1]
+            for opt in option:
+                if opt is not None:
+                    if options[opt]["flag"]:
+                        parsed[opt] = True
                     else:
-                        index += 1
-                        parsed[option] = args[index]
+                        if "=" in arg:
+                            parsed[opt] = arg.split("=")[1]
+                        else:
+                            index += 1
+                            parsed[opt] = args[index]
         else:
             parsed["args"].append(arg)
     

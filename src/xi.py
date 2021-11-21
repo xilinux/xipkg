@@ -20,7 +20,7 @@ verbs = { v: globals()[v] for v in [
 def main():
     opts = options.parse_args()
     args = opts["args"]
-
+    
     if opts["h"]:
         options.print_usage()
         return
