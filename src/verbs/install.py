@@ -6,15 +6,15 @@ import time
 import requests
 import hashlib
 
-def get_best_source(exclude=[], sources_list="/var/lib/xipkg/sources"):
-    # TODO implement exclude
+def get_best_source(available, sources_list="/var/lib/xipkg/sources"):
     source_speeds = {}
     with open(sources_list, "r") as file:
         for line in file.readlines():
             split = line.split(" ")
             if len(split) > 0:
                 try:
-                    source_speeds[split[0]] = float(split[1])
+                    if split[0] in available:
+                        source_speeds[split[0]] = float(split[1])
                 except:
                     pass
 
@@ -50,19 +50,22 @@ def verify_signature(package_file, package_info,
     with open(sig_cached_path, "wb") as file:
         file.write(package_info["SIGNATURE"])
 
-    keys = os.listdir(keychain_dir)
-    for key in keys:
-        key_path = util.add_path(keychain_dir, key)
-        
-        command = f"openssl dgst -verify {key_path} -signature {sig_cached_path} {package_file}" 
+    if os.path.exists(keychain_dir):
+        keys = os.listdir(keychain_dir)
+        for key in keys:
+            key_path = util.add_path(keychain_dir, key)
+            
+            command = f"openssl dgst -verify {key_path} -signature {sig_cached_path} {package_file}" 
 
-        if "OK" in os.popen(command).read():
-            return True
-        elif verbose:
-            print(colors.RED 
-                    + f"Failed to verify signature against {key}"
-                    + colors.RESET)
+            if "OK" in os.popen(command).read():
+                return True
+            elif verbose:
+                print(colors.RED 
+                        + f"Failed to verify signature against {key}"
+                        + colors.RESET)
 
+    elif verbose:
+        print(colors.BLACK + "There are no keys to verify with")
     return False
 
 def retrieve_package_info(sources, checksum, package_name, config,
@@ -72,7 +75,7 @@ def retrieve_package_info(sources, checksum, package_name, config,
     cache_dir=config["dir"]["cache"]
     
     # TODO we may potentially do this a few times while resolving deps, might want to cache things here
-    for source in get_best_source(sources_list=sources_list):
+    for source in get_best_source(sources, sources_list=sources_list):
         url = sources[source]
 
         package_info_url = util.add_path(url, package_name + ".xipkg.info")
@@ -100,7 +103,7 @@ def retrieve_package(sources, package_info, package_name, config,
     
     checksum = package_info["CHECKSUM"]
 
-    for source in get_best_source(sources_list=sources_list):
+    for source in get_best_source(sources, sources_list=sources_list):
         url = sources[source]
         if verbose:
             print(colors.LIGHT_BLACK + f"using source {source} at {url}")

@@ -71,18 +71,21 @@ def save_package(package, info, location):
 # security problem to automatically decide to verify keys
 # users should do this manually whenever they add a new source
 ###### !!! #######
-def import_key(source, url, verbose=False):
+def import_key(source, url, config, verbose=False):
     keyname = "xi.pub"
-    status, response = curl(url + keyname if url[-1] == "/" else f"/{keyname}")
 
-    if status == 200:
-        key_path = os.path.join(config["dir"]["keychain"], source + ".pub")
-        with open(key_path, "w"):
-            key_path.write(key_path)
+    keychain_dir = config["dir"]["keychain"]
+    util.mkdir(keychain_dir)
+    key_path = os.path.join(keychain_dir, source + ".pub")
 
-    elif verbose:
-        print(colors.BG_RED + f"" + colors.RESET)
+    if os.path.exists(key_path):
+        if verbose:
+            print(colors.LIGHT_BLACK + f"Skipping already imported key from {source}")
+        return 0
 
+    else:
+        key_path = util.curl_to_file(url + keyname if url[-1] == "/" else f"/{keyname}", key_path)
+        return 1
 
 def test_source(source, url):
     # requesting a resource may not be the best way to do this, caching etc
@@ -123,11 +126,9 @@ def sync(args, options, config):
 
     v = options["v"]
 
-    # test_sources(sources, config["dir"]["sources"], test_count=int(config["pings"]))
-    
     for repo in repos:
-        if v:
-            print(colors.LIGHT_BLACK + f"downloading package lists for {repo}...")
+        if v: print(colors.LIGHT_BLACK + f"downloading package lists for {repo}...")
+
         packages, speeds = sync_packages(repo, sources, verbose=v)
         if v: print(colors.LIGHT_BLACK + f"downloaded {len(packages)} packages from {len(sources)} sources")
         
@@ -148,7 +149,16 @@ def sync(args, options, config):
         util.loading_bar(total, total, f"Synced {repo}")
         print(colors.RESET)
     
-
+    if "key_authority" in config:
+        imported = 0
+        authorities = config["key_authority"]
+        for authority in authorities:
+            if authority in sources:
+                url = sources[authority]
+                imported += import_key(authority, url, config, verbose=v)
+            elif v:
+                print(colors.RED + f"Cannot find authority {authority} in sources")
+        if imported > 0: print(colors.CYAN + f"Imported keys from {imported} sources")
     #total = len(sources)
     #completed = 0
     #for source, url in sources:
