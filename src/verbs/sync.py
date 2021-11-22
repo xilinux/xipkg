@@ -20,8 +20,6 @@ def list_packages(url):
         
 def sync_packages(repo, sources, verbose=False):
     packages = {}
-    total = 0
-    completed = 0
 
     speeds = {}
     for source,url in sources.items():
@@ -32,52 +30,40 @@ def sync_packages(repo, sources, verbose=False):
             speeds[source] = speed
 
         if len(listed) == 0 and verbose:
-            print(colors.BG_RED + f"No packages found in {source}/{repo}" + colors.RESET)
+            print(colors.RED + f"No packages found in {source}/{repo}" + colors.RESET)
 
-        total += len(listed)
         for p in listed:
             if not p in packages:
                 packages[p] = []
-
             packages[p].append((listed[p], source))
-            completed += 1
-            util.loading_bar(completed, total, f"Syncing {repo}")
 
     return packages, speeds
 
-def validate_packages(packages, repo, verbose=False):
-    output = {}
-    completed = 0
-    total = len(packages)
-    for package, versions in packages.items():
-        popularity = {}
-        for v in versions:
-            checksum = v[0]
-            source = v[1]
-            if not checksum in popularity:
-                popularity[checksum] = 0
-            popularity[checksum] += 1
+def validate_package(package, versions, repo, verbose=False):
+    popularity = {}
+    for v in versions:
+        checksum = v[0]
+        source = v[1]
+        if not checksum in popularity:
+            popularity[checksum] = 0
+        popularity[checksum] += 1
 
-        most_popular = sorted(popularity)[0]
-        
-        # change the packages dict to list all the sources
-        output[package] = {
-                "checksum": most_popular,
-                "sources" : [v[1] for v in versions if v[0] == most_popular]
-                }
-        completed += 1
-        util.loading_bar(completed, total, f"Validating {repo}")
-    return output
+    most_popular = sorted(popularity)[0]
+    
+    # change the packages dict to list all the sources
+    return {
+            "checksum": most_popular,
+            "sources" : [v[1] for v in versions if v[0] == most_popular]
+            }
 
-def save_package_list(validated, location):
+def save_package(package, info, location):
     util.mkdir(location)
-    for package,info in validated.items():
-        package_file = os.path.join(location, package)
-        
-        content = ""
-        with open(package_file, "w") as file:
-            file.write("checksum=" + info["checksum"] + "\n")
-            file.write("sources=" + " ".join([source for source in info["sources"]]))
+    package_file = os.path.join(location, package)
+    
+    content = ""
+    with open(package_file, "w") as file:
+        file.write("checksum=" + info["checksum"] + "\n")
+        file.write("sources=" + " ".join([source for source in info["sources"]]))
 
 
 ###### !!! #######
@@ -140,7 +126,10 @@ def sync(args, options, config):
     # test_sources(sources, config["dir"]["sources"], test_count=int(config["pings"]))
     
     for repo in repos:
+        if v:
+            print(colors.LIGHT_BLACK + f"downloading package lists for {repo}...")
         packages, speeds = sync_packages(repo, sources, verbose=v)
+        if v: print(colors.LIGHT_BLACK + f"downloaded {len(packages)} packages from {len(sources)} sources")
         
         sorted(speeds)
         with open(config["dir"]["sources"], "w") as file:
@@ -148,12 +137,15 @@ def sync(args, options, config):
                 file.write(f"{source} {ping}\n")
         
         # find the most popular hash to use
-        validated = validate_packages(packages, repo, verbose=v)
+        done = 0 
+        total = len(packages.items())
+        for package,versions in packages.items():
+            info = validate_package(package, versions, repo, verbose=v)
+            save_package(package, info, os.path.join(config["dir"]["packages"], repo))
+            done += 1
+            util.loading_bar(done, total, f"Syncing {repo}")
 
-        save_package_list(validated, os.path.join(config["dir"]["packages"], repo))
-
-        num_packages = len(validated)
-        util.loading_bar(num_packages, num_packages, f"Synced {repo}")
+        util.loading_bar(total, total, f"Synced {repo}")
         print(colors.RESET)
     
 
