@@ -6,6 +6,8 @@ import time
 import requests
 import hashlib
 
+from verbs.sync import sync
+
 def get_best_source(available, sources_list="/var/lib/xipkg/sources"):
     source_speeds = {}
     with open(sources_list, "r") as file:
@@ -187,13 +189,13 @@ def find_all_dependencies(package_names, options, config):
                     for dep in deps:
                         if not dep in all_deps:
                             if is_installed(dep, config, options["r"]):
-                                print(colors.YELLOW + f"Package {query} has already been installed")
+                                if options["v"]: print(colors.YELLOW + f"Package {dep} has already been installed")
                             else:
                                 to_check.append(dep)
             elif options["v"]:
-                    util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to retrieve info for {query}")
+                    util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to retrieve info for {dep}")
         else:
-            util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
+            if options["v"]: util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
 
     if len(all_deps) > 0:
         util.loading_bar(len(all_deps), len(all_deps) + len(to_check), "Resolved dependencies")
@@ -228,7 +230,7 @@ def save_installed_info(package_name, package_info,
     util.mkdir(installed_dir)
 
     name = package_info["NAME"]
-    description = package_info["DESCRIPTION"]
+    description = package_info["DESCRIPTION"] if "DESCRIPTION" in package_info else ""
     installed_checksum = package_info["CHECKSUM"]
     build_date = package_info["DATE"]
     version = package_info["VER_HASH"]
@@ -252,6 +254,9 @@ def save_installed_info(package_name, package_info,
 
 
 def install(args, options, config):
+    if not options["l"]:
+        sync(args, options, config)
+
     sources = config["sources"]
     repos = config["repos"]
 
@@ -261,7 +266,10 @@ def install(args, options, config):
     packages_dir = config["dir"]["packages"]
     to_install = args if options["n"] else find_all_dependencies(args, options, config)
 
+
     if len(to_install) > 0:
+
+
         print(colors.BLUE + "The following packages will be installed:")
         print(end="\t")
         for d in to_install:
@@ -286,7 +294,7 @@ def install(args, options, config):
                 install_package(package, package_path, info, 
                         repo, sources[source], key,
                         config, root=options["r"])
-                print(colors.CYAN + f"Installed {package}")
+                print(colors.BG_CYAN + colors.LIGHT_BLACK + f"Installed {package}" + colors.RESET)
         else:
             print(colors.RED + "Action cancelled by user")
     else:

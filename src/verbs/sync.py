@@ -23,7 +23,6 @@ def sync_packages(repo, sources, verbose=False):
 
     speeds = {}
     for source,url in sources.items():
-
         listed, speed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
 
         if speed > 0:
