@@ -59,10 +59,18 @@ def save_package(package, info, location):
     util.mkdir(location)
     package_file = os.path.join(location, package)
     
+    exists = False
+    if os.path.exists(package_file):
+        with open(package_file, "r") as file:
+            text = file.read()
+            exists = info["checksum"] in text
+
     content = ""
     with open(package_file, "w") as file:
         file.write("checksum=" + info["checksum"] + "\n")
         file.write("sources=" + " ".join([source for source in info["sources"]]))
+
+    return exists
 
 
 ###### !!! #######
@@ -125,6 +133,8 @@ def sync(args, options, config):
 
     v = options["v"]
 
+    new = 0
+    
     for repo in repos:
         if v: print(colors.LIGHT_BLACK + f"downloading package lists for {repo}...")
 
@@ -141,12 +151,17 @@ def sync(args, options, config):
         total = len(packages.items())
         for package,versions in packages.items():
             info = validate_package(package, versions, repo, verbose=v)
-            save_package(package, info, os.path.join(config["dir"]["packages"], repo))
+            if not save_package(package, info, os.path.join(config["dir"]["packages"], repo)):
+                new += 1
             done += 1
             util.loading_bar(done, total, f"Syncing {repo}")
 
         util.loading_bar(total, total, f"Synced {repo}")
         print(colors.RESET)
+
+    if new > 0:
+        util.fill_line(f"There are {new} new updates", colors.LIGHT_GREEN)
+
     
     if "key_authority" in config:
         imported = 0

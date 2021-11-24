@@ -33,6 +33,11 @@ def loading_bar(completed, total, text,
 
     print(color + info, end="\r")
 
+def fill_line(text, color, end="\n"):
+    columns, rows = shutil.get_terminal_size((80, 20))
+    spaces = columns - (len(text))
+    print(color + text +  "".join([" " for i in range(spaces)]), end=end)
+
 def print_reset(text):
     print(colors.RESET + text)
 
@@ -65,7 +70,7 @@ def curl_to_file(url, path, text=""):
             for chunk in ic:
                 if text:
                     divisor, unit = get_unit(length)
-                    loading_bar(int(done/divisor), int(length/divisor), "Downloading " + text, unit=unit)
+                    loading_bar(round(done/divisor, 2), round(length/divisor, 2), "Downloading " + text, unit=unit)
 
                 f.write(chunk)
                 done += c_size
