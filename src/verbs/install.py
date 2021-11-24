@@ -37,7 +37,6 @@ def find_package(query, repos, packages_dir, sources):
                             if source in listed_sources
                         }
                 return checksum, found_sources, requested_repo
-
     return None, [], None
 
 def verify_signature(package_file, package_info, 
@@ -58,7 +57,7 @@ def verify_signature(package_file, package_info,
             command = f"openssl dgst -verify {key_path} -signature {sig_cached_path} {package_file}" 
 
             if "OK" in os.popen(command).read():
-                return True
+                return key
             elif verbose:
                 print(colors.RED 
                         + f"Failed to verify signature against {key}"
@@ -66,7 +65,7 @@ def verify_signature(package_file, package_info,
 
     elif verbose:
         print(colors.BLACK + "There are no keys to verify with")
-    return False
+    return ""
 
 def retrieve_package_info(sources, checksum, package_name, config,
                             verbose=False, skip_verification=False):
@@ -118,11 +117,11 @@ def retrieve_package(sources, package_info, package_name, config,
             
             if not skip_verification:
                 if downloaded_checksum == checksum:
-
-                    if verify_signature(package_path, package_info, 
-                            cache_dir=cache_dir, keychain_dir=keychain_dir, verbose=verbose):
+                    sig = verify_signature(package_path, package_info, 
+                            cache_dir=cache_dir, keychain_dir=keychain_dir, verbose=verbose)
+                    if len(sig) > 0:
                         print(colors.RESET)
-                        return package_path
+                        return package_path, source, sig
                     elif verbose:
                         print(colors.RED 
                                 + f"Failed to verify signature for {package_name} in {source}" 
@@ -133,7 +132,7 @@ def retrieve_package(sources, package_info, package_name, config,
                                 + colors.RESET)
             else:
                 print(colors.RESET)
-                return package_path
+                return package_path, source, "none"
     print(colors.RESET + colors.RED + f"No valid packages found for {package_name}" + colors.RESET)
     return ""
 
@@ -157,14 +156,11 @@ def parse_package_info(packageinfo):
     return info
 
 def resolve_dependencies(package_info):
-    getpkgs = lambda deps: re.findall("\w*", deps)
-    deps = getpkgs(package_info["DEPS"])
-
-    deps = [
-                dep for dep in deps if len(dep) > 0
+    return [
+                dep 
+                for dep in re.findall("\w*", package_info["DEPS"]) 
+                if len(dep) > 0
             ]
-
-    return deps
 
 def find_all_dependencies(package_names, options, config):
     # this is all assuming that the order of deps installed doesn't matter
@@ -192,8 +188,7 @@ def find_all_dependencies(package_names, options, config):
                                 print(colors.YELLOW + f"Package {query} has already been installed")
                             else:
                                 to_check.append(dep)
-            else:
-                if options["v"]:
+            elif options["v"]:
                     util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to retrieve info for {query}")
         else:
             util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
@@ -214,9 +209,38 @@ def is_installed(package_name, config, root="/"):
         return package_name in files
     return False
 
-def install_package(package_path, package_info, config, root="/"):
+def install_package(package_name, package_path, package_info, 
+        repo, source_url, key,
+        config, root="/"):
     # untar and move into root
     # then add entry in the config["dir"]["installed"]
+
+    installed_dir = util.add_path(root, config["dir"]["installed", package_name])
+    util.mkdir(installed_dir)
+
+    # TODO save which files are installed in installed/package/files for futher reference (ie which package does this file belong to?)
+    
+    name = package_info["NAME"]
+    description = package_info["DESCRIPTION"]
+    installed_checksum = package_info["CHECKSUM"]
+    build_date = package_info["DATE"]
+    version = package_info["VER_HASH"]
+    installed_date = os.popen("date").read()
+
+    package_url = util.add_path(source_url, repo, package_name + ".xipkg")
+
+    info_file = util.add_path(installed_dir, info)
+    with open(info_file, "w") as file:
+        file.write(f"NAME={name}\n")
+        file.write(f"DESCRIPTION={description}\n")
+        file.write(f"CHECKSUM={installed_checksum}\n")
+        file.write(f"VERSION={version}\n")
+        file.write(f"INSTALL_DATE={installed_date}\n")
+        file.write(f"BUILD_DATE={build_date}\n")
+        file.write(f"KEY={key}\n")
+        file.write(f"URL={package_url}\n")
+        file.write(f"REPO={repo}\n")
+        file.write(f"URL={}\n")
 
     pass
 
@@ -229,7 +253,6 @@ def install(args, options, config):
     unsafe = options["u"]
 
     packages_dir = config["dir"]["packages"]
-
     to_install = args if options["n"] else find_all_dependencies(args, options, config)
 
     if len(to_install) > 0:
