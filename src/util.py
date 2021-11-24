@@ -4,9 +4,13 @@ import colors
 import time
 import os
 import hashlib
+import tarfile
 
 DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_CYAN
 DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
+
+def extract_tar(package_path, destination):
+    tarfile.open(package_path).extractall(destination)
 
 def add_path(*argv):
     a = argv[0]

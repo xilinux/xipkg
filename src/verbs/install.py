@@ -74,6 +74,8 @@ def retrieve_package_info(sources, checksum, package_name, config,
     cache_dir=config["dir"]["cache"]
     
     # TODO we may potentially do this a few times while resolving deps, might want to cache things here
+
+    # TODO or find cached package checksum from the cache folder
     for source in get_best_source(sources, sources_list=sources_list):
         url = sources[source]
 
@@ -212,14 +214,19 @@ def is_installed(package_name, config, root="/"):
 def install_package(package_name, package_path, package_info, 
         repo, source_url, key,
         config, root="/"):
+
+    # TODO loading bar here
+    util.extract_tar(package_path, root)
+    save_installed_info(package_name, package_info, repo, source_url, key, config, root=root)
     # untar and move into root
     # then add entry in the config["dir"]["installed"]
 
-    installed_dir = util.add_path(root, config["dir"]["installed", package_name])
+def save_installed_info(package_name, package_info,
+        repo, source_url, key, 
+        config, root=""):
+    installed_dir = util.add_path(root, config["dir"]["installed"], package_name)
     util.mkdir(installed_dir)
 
-    # TODO save which files are installed in installed/package/files for futher reference (ie which package does this file belong to?)
-    
     name = package_info["NAME"]
     description = package_info["DESCRIPTION"]
     installed_checksum = package_info["CHECKSUM"]
@@ -229,18 +236,17 @@ def install_package(package_name, package_path, package_info,
 
     package_url = util.add_path(source_url, repo, package_name + ".xipkg")
 
-    info_file = util.add_path(installed_dir, info)
+    info_file = util.add_path(installed_dir, "info")
     with open(info_file, "w") as file:
         file.write(f"NAME={name}\n")
         file.write(f"DESCRIPTION={description}\n")
         file.write(f"CHECKSUM={installed_checksum}\n")
         file.write(f"VERSION={version}\n")
-        file.write(f"INSTALL_DATE={installed_date}\n")
+        file.write(f"INSTALL_DATE={installed_date}")
         file.write(f"BUILD_DATE={build_date}\n")
         file.write(f"KEY={key}\n")
         file.write(f"URL={package_url}\n")
         file.write(f"REPO={repo}\n")
-        file.write(f"URL={}\n")
 
     pass
 
@@ -273,8 +279,14 @@ def install(args, options, config):
                             verbose=v, skip_verification=unsafe
                         )
 
-                retrieve_package(sources, info, package, config,
+                package_path, source, key = retrieve_package(sources, 
+                        info, package, config, 
                         verbose=v, skip_verification=unsafe)
+
+                install_package(package, package_path, info, 
+                        repo, sources[source], key,
+                        config, root=options["r"])
+                print(colors.CYAN + f"Installed {package}")
         else:
             print(colors.RED + "Action cancelled by user")
     else:
