@@ -114,6 +114,7 @@ def retrieve_package(sources, package_info, package_name, config,
         package_dir = util.add_path(cache_dir, source)
 
         util.mkdir(package_dir)
+        # TODO if exists maybe just use cached version
         status, package_path = util.curl_to_file(package_url, util.add_path(package_dir, package_name + ".xipkg"), text=package_name + ".xipkg")
 
         if status == 200:
@@ -228,7 +229,7 @@ def install_package(package_name, package_path, package_info,
         config, root="/"):
 
     # TODO loading bar here
-    util.extract_tar(package_path, root)
+    files = util.extract_tar(package_path, root)
     save_installed_info(package_name, package_info, repo, source_url, key, config, root=root)
     # untar and move into root
     # then add entry in the config["dir"]["installed"]
@@ -262,6 +263,23 @@ def save_installed_info(package_name, package_info,
 
     pass
 
+def install_single(package, options, config, verbose=False, unsafe=False):
+
+        checksum, sources, repo = find_package(package, config["repos"],
+                config["dir"]["packages"], config["sources"])
+
+        info = retrieve_package_info(
+                    sources, checksum, package, config,
+                    verbose=verbose, skip_verification=unsafe
+                )
+
+        package_path, source, key = retrieve_package(sources, 
+                info, package, config, 
+                verbose=verbose, skip_verification=unsafe)
+
+        install_package(package, package_path, info, 
+                repo, sources[source], key,
+                config, root=options["r"])
 
 def install(args, options, config):
     if not options["l"]:
@@ -276,10 +294,7 @@ def install(args, options, config):
     packages_dir = config["dir"]["packages"]
     to_install = args if options["n"] else find_all_dependencies(args, options, config)
 
-
     if len(to_install) > 0:
-
-
         print(colors.CLEAR_LINE + colors.RESET, end="")
         print(colors.BLUE + "The following packages will be installed:")
         print(end="\t")
@@ -289,26 +304,8 @@ def install(args, options, config):
 
         if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
 
-            downloaded = []
             for package in to_install:
-                checksum, sources, repo = find_package(package, config["repos"],
-                        config["dir"]["packages"], config["sources"])
-
-                info = retrieve_package_info(
-                            sources, checksum, package, config,
-                            verbose=v, skip_verification=unsafe
-                        )
-
-                package_path, source, key = retrieve_package(sources, 
-                        info, package, config, 
-                        verbose=v, skip_verification=unsafe)
-
-                downloaded.append(package, package_path, info, 
-                                repo, sources[source], key
-                        )
-                install_package(package, package_path, info, 
-                        repo, sources[source], key,
-                        config, root=options["r"])
+                install_single(package, options, config, verbose=v, unsafe=unsafe)
                 util.fill_line(f"Installed {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
 
         else:

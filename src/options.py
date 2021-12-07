@@ -65,7 +65,7 @@ def parse_args():
 
             # is a named argument with a --
             if arg[1] == "-" and len(arg) > 2 and arg[2:].split("=")[0] in names:
-                option.appen(names[arg[2:].split("=")[0]])
+                option.append(names[arg[2:].split("=")[0]])
             # is a single letter argument with a -
             else:
                 for letter in arg[1:]:

@@ -5,6 +5,7 @@ import colors
 
 from verbs.sync import sync
 from verbs.install import install
+from verbs.update import update
 
 def search():
     pass
@@ -13,6 +14,7 @@ def remove():
 
 verbs = { v: globals()[v] for v in [
                 "search",
+                "update",
                 "install",
                 "remove",
                 "sync"
