@@ -47,12 +47,13 @@ def validate_package(package, versions, repo, verbose=False):
             popularity[checksum] = 0
         popularity[checksum] += 1
 
-    most_popular = sorted(popularity)[0]
+    most_popular = sorted(popularity)[-1]
     
+    sources = [v[1] for v in versions if v[0] == most_popular]
     # change the packages dict to list all the sources
     return {
             "checksum": most_popular,
-            "sources" : [v[1] for v in versions if v[0] == most_popular]
+            "sources" : sources
             }
 
 def save_package(package, info, location):
