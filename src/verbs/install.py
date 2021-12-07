@@ -230,12 +230,11 @@ def install_package(package_name, package_path, package_info,
 
     # TODO loading bar here
     files = util.extract_tar(package_path, root)
-    save_installed_info(package_name, package_info, repo, source_url, key, config, root=root)
-    # untar and move into root
-    # then add entry in the config["dir"]["installed"]
+    save_installed_info(package_name, package_info, files, repo, source_url, key, config, root=root)
+    
 
 def save_installed_info(package_name, package_info,
-        repo, source_url, key, 
+        files, repo, source_url, key, 
         config, root=""):
     installed_dir = util.add_path(root, config["dir"]["installed"], package_name)
     util.mkdir(installed_dir)
@@ -261,6 +260,10 @@ def save_installed_info(package_name, package_info,
         file.write(f"URL={package_url}\n")
         file.write(f"REPO={repo}\n")
 
+    files_file = util.add_path(installed_dir, "files")
+    with open(files_file, "w") as file:
+        file.write(files)
+
     pass
 
 def install_single(package, options, config, verbose=False, unsafe=False):
@@ -277,7 +280,7 @@ def install_single(package, options, config, verbose=False, unsafe=False):
                 info, package, config, 
                 verbose=verbose, skip_verification=unsafe)
 
-        install_package(package, package_path, info, 
+        files = install_package(package, package_path, info, 
                 repo, sources[source], key,
                 config, root=options["r"])
 

@@ -10,7 +10,12 @@ DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_CYAN
 DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
 
 def extract_tar(package_path, destination):
-    os.system(f"tar -h --no-overwrite-dir -xf {package_path} -C {destination}")
+    cmd = f"tar -h --no-overwrite-dir -xvf {package_path} -C {destination}"
+    
+    os.popen(cmd).read()
+    with tarfile.open(package_path) as tar:
+        return "\n".join(["".join(m.name[1:]) for m in tar.getmembers() if not m.isdir()])
+            
 
 def add_path(*argv):
     a = argv[0]
