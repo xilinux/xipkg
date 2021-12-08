@@ -6,6 +6,10 @@
 R=$1
 
 mkdir -p $R
+mkdir -p $R/tmp
+mkdir -p $R/dev
+mkdir -p $R/sys
+mkdir -p $R/proc
 mkdir -p $R/usr/bin
 mkdir -p $R/usr/lib
 
