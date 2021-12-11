@@ -4,12 +4,11 @@ import util
 import colors
 
 from verbs.sync import sync
+from verbs.remove import remove
 from verbs.install import install
 from verbs.update import update
 
 def search():
-    pass
-def remove():
     pass
 
 verbs = { v: globals()[v] for v in [
