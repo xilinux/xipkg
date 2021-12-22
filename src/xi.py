@@ -4,15 +4,17 @@ import util
 import colors
 
 from verbs.sync import sync
+from verbs.file import file
+from verbs.search import search
+from verbs.info import info
 from verbs.remove import remove
 from verbs.install import install
 from verbs.update import update
 
-def search():
-    pass
-
 verbs = { v: globals()[v] for v in [
                 "search",
+                "file",
+                "info",
                 "update",
                 "install",
                 "remove",
