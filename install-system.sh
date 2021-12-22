@@ -9,6 +9,7 @@ mkdir -p $R
 mkdir -p $R/tmp
 mkdir -p $R/dev
 mkdir -p $R/sys
+mkdir -p $R/run
 mkdir -p $R/proc
 mkdir -p $R/usr/bin
 mkdir -p $R/usr/lib
@@ -28,3 +29,21 @@ xi sync
 
 xi -nyl --root . install $(ls /var/lib/xipkg/packages/core)
 xi -nyl --root . install xipkg
+
+cd bin
+ln -s bash sh
+
+cd ../..
+
+mkdir -p $R/var/lib/xipkg/
+cp -r /var/lib/xipkg/packages $R/var/lib/xipkg
+cp -r /var/lib/xipkg/keychain $R/var/lib/xipkg
+
+# Autoconfiguring some things like network
+
+echo "xilinux" > $R/etc/hostname
+
+cat > $R/etc/resolv.conf << "EOF"
+nameserver 80.80.80.80
+nameserver 80.80.81.81
+EOF
