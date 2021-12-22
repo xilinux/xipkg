@@ -13,6 +13,7 @@ xi: src/xi.py
 
 install: clean xi xipkg.conf default.conf bin/xi
 	mkdir -p $(DESTDIR)/etc/xipkg.d/
+	mkdir -p $(DESTDIR)/usr/bin
 	cp default.conf $(DESTDIR)/etc/xipkg.d/
 	cp xipkg.conf $(DESTDIR)/etc/xipkg.conf
 	cp bin/xi $(DESTDIR)/usr/bin/xi
