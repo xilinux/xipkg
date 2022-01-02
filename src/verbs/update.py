@@ -50,7 +50,7 @@ def update(args, options, config):
 
         if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
             for package in updates:
-                install_single(package, options, config, verbose=v, unsafe=options["u"])
+                install_single(package, options, config, verbose=v, post_install=False, unsafe=options["u"])
                 util.fill_line(f"Updated {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
     else:
         print(colors.LIGHT_RED + "Nothing to do")

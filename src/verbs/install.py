@@ -219,12 +219,15 @@ def is_installed(package_name, config, root="/"):
     return False
 
 def install_package(package_name, package_path, package_info, 
-        repo, source_url, key,
-        config, root="/"):
+        repo, source_url, key, post_install,
+        config, verbose=False, root="/"):
 
     # TODO loading bar here
     files = util.extract_tar(package_path, root)
+    if post_install:
+        run_post_install(config, verbose=verbose, root=root)
     save_installed_info(package_name, package_info, files, repo, source_url, key, config, root=root)
+
     
 
 def save_installed_info(package_name, package_info,
@@ -260,7 +263,7 @@ def save_installed_info(package_name, package_info,
 
     pass
 
-def install_single(package, options, config, verbose=False, unsafe=False):
+def install_single(package, options, config, post_install=True, verbose=False, unsafe=False):
 
         checksum, sources, repo = find_package(package, config["repos"],
                 config["dir"]["packages"], config["sources"])
@@ -275,8 +278,20 @@ def install_single(package, options, config, verbose=False, unsafe=False):
                 verbose=verbose, skip_verification=unsafe)
 
         files = install_package(package, package_path, info, 
-                repo, sources[source], key,
-                config, root=options["r"])
+                repo, sources[source], key, post_install,
+                config, verbose=verbose, root=options["r"])
+
+def run_post_install(config, verbose=False, root="/"):
+    installed_dir = util.add_path(root, config["dir"]["postinstall"])
+    if os.path.exists(installed_dir):
+        files = os.listdir(installed_dir)
+        for file in files:
+            command = f"sh {util.add_path(installed_dir, file)}"
+            run = os.popen(command)
+            if verbose:
+                print(run.read())
+            os.remove(command)
+    
 
 def install(args, options, config):
     if not options["l"]:
