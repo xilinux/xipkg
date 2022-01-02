@@ -31,8 +31,9 @@ ln -s usr/local usr
 xi sync
 
 xi -nyl --root . install $(ls /var/lib/xipkg/packages/core)
-xi -nyl --root . install xipkg
 xi -nyl --root . keyimport $KEY
+# chroot into the system to install xipkg and any postinstall scripts
+xi -nyl --root . install xipkg
 
 cd bin
 ln -s bash sh

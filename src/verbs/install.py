@@ -264,34 +264,34 @@ def save_installed_info(package_name, package_info,
     pass
 
 def install_single(package, options, config, post_install=True, verbose=False, unsafe=False):
+    checksum, sources, repo = find_package(package, config["repos"],
+            config["dir"]["packages"], config["sources"])
 
-        checksum, sources, repo = find_package(package, config["repos"],
-                config["dir"]["packages"], config["sources"])
+    info = retrieve_package_info(
+                sources, checksum, package, config,
+                verbose=verbose, skip_verification=unsafe
+            )
 
-        info = retrieve_package_info(
-                    sources, checksum, package, config,
-                    verbose=verbose, skip_verification=unsafe
-                )
+    package_path, source, key = retrieve_package(sources, 
+            info, package, config, 
+            verbose=verbose, skip_verification=unsafe)
 
-        package_path, source, key = retrieve_package(sources, 
-                info, package, config, 
-                verbose=verbose, skip_verification=unsafe)
-
-        files = install_package(package, package_path, info, 
-                repo, sources[source], key, post_install,
-                config, verbose=verbose, root=options["r"])
+    files = install_package(package, package_path, info, 
+            repo, sources[source], key, post_install,
+            config, verbose=verbose, root=options["r"])
 
 def run_post_install(config, verbose=False, root="/"):
     installed_dir = util.add_path(root, config["dir"]["postinstall"])
     if os.path.exists(installed_dir):
         files = os.listdir(installed_dir)
         for file in files:
-            command = f"sh {util.add_path(installed_dir, file)}"
-            run = os.popen(command)
-            if verbose:
-                print(run.read())
-            os.remove(command)
-    
+            f = util.add_path(config["dir"]["postinstall"], file)
+            command = f"sh {f}"
+            if root != "/":
+                os.chroot(root)
+            os.chdir("/")
+            os.system(command)
+            os.remove(f)
 
 def install(args, options, config):
     if not options["l"]:
@@ -304,25 +304,31 @@ def install(args, options, config):
     unsafe = options["u"]
 
     packages_dir = config["dir"]["packages"]
-    to_install = args if options["n"] else find_all_dependencies(args, options, config)
 
-    if len(to_install) > 0:
-        print(colors.CLEAR_LINE + colors.RESET, end="")
-        print(colors.BLUE + "The following packages will be installed:")
-        print(end="\t")
-        for d in to_install:
-            print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
-        print()
+    # have some interaction with sudo when necessary rather than always require it
+    # this check may need to be done sooner?
+    if util.is_root() or options["r"] != "/":
+        to_install = args if options["n"] else find_all_dependencies(args, options, config)
 
-        if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
+        if len(to_install) > 0:
+            print(colors.CLEAR_LINE + colors.RESET, end="")
+            print(colors.BLUE + "The following packages will be installed:")
+            print(end="\t")
+            for d in to_install:
+                print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
+            print()
 
-            for package in to_install:
-                install_single(package, options, config, verbose=v, unsafe=unsafe)
-                util.fill_line(f"Installed {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
+            if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
 
+                for package in to_install:
+                    install_single(package, options, config, verbose=v, unsafe=unsafe)
+                    util.fill_line(f"Installed {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
+
+            else:
+                print(colors.RED + "Action cancelled by user")
         else:
-            print(colors.RED + "Action cancelled by user")
+            print(colors.LIGHT_RED + "Nothing to do")
     else:
-        print(colors.LIGHT_RED + "Nothing to do")
+        print(colors.RED + "Root is required to install packages")
 
 

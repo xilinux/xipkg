@@ -23,6 +23,10 @@ def add_path(*argv):
         a = a + ("" if a[-1] == "/"  else "/") + (b[1:] if b[0] == "/" else b)
     return a
 
+def is_root():
+    return os.environ.get("SUDO_UID") or os.geteuid() == 0 
+
+
 def loading_bar(completed, total, text, 
         unit="", color=DEFAULT_BAR_COLOR, reset=DEFAULT_BAR_COLOR_RESET):
 
