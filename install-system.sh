@@ -15,6 +15,7 @@ mkdir -p $R/run
 mkdir -p $R/proc
 mkdir -p $R/usr/bin
 mkdir -p $R/usr/lib
+mkdir -p $R/root
 
 cd $R
 ln -s usr/bin bin
