@@ -179,34 +179,28 @@ def find_all_dependencies(package_names, options, config):
         # probably better way to implement this obligatory wildcard
         # 100% sure there is a better way of doing this than installing all packages from a repo
         # maybe some sort of package grouping (or empty package with deps on all needed)
-        if dep[-2:] == "/*":
-            repo = dep[:-2]
-            repo_dir = os.path.join(config["dir"]["packages"], repo)
-            files = os.listdir(repo_dir)
-            return files
+        dep_checksum, dep_sources, dep_repo = find_package(dep, config["repos"], config["dir"]["packages"], config["sources"])
+
+        if dep_checksum is not None:
+            info = retrieve_package_info(
+                        dep_sources, dep_checksum, dep, config,
+                        verbose=options["v"], skip_verification=options["u"]
+                    )
+
+            if len(info) > 0:
+                if not dep in all_deps:
+                    all_deps.append(dep)
+                    deps = resolve_dependencies(info)
+                    for dep in deps:
+                        if not dep in all_deps:
+                            if is_installed(dep, config, options["r"]):
+                                if options["v"]: print(colors.YELLOW + f"Package {dep} has already been installed")
+                            else:
+                                to_check.append(dep)
+            elif options["v"]:
+                    util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to retrieve info for {dep}")
         else:
-            dep_checksum, dep_sources, dep_repo = find_package(dep, config["repos"], config["dir"]["packages"], config["sources"])
-
-            if dep_checksum is not None:
-                info = retrieve_package_info(
-                            dep_sources, dep_checksum, dep, config,
-                            verbose=options["v"], skip_verification=options["u"]
-                        )
-
-                if len(info) > 0:
-                    if not dep in all_deps:
-                        all_deps.append(dep)
-                        deps = resolve_dependencies(info)
-                        for dep in deps:
-                            if not dep in all_deps:
-                                if is_installed(dep, config, options["r"]):
-                                    if options["v"]: print(colors.YELLOW + f"Package {dep} has already been installed")
-                                else:
-                                    to_check.append(dep)
-                elif options["v"]:
-                        util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to retrieve info for {dep}")
-            else:
-                if options["v"]: util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
+            if options["v"]: util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
 
     if len(all_deps) > 0:
         util.loading_bar(len(all_deps), len(all_deps) + len(to_check), "Resolved dependencies")

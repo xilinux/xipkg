@@ -83,27 +83,6 @@ def save_package(package, info, location):
     return exists
 
 
-###### !!! #######
-# THIS SHOULD BE A USER ACTION 
-# security problem to automatically decide to verify keys
-# users should do this manually whenever they add a new source
-###### !!! #######
-def import_key(source, url, config, verbose=False):
-    keyname = "xi.pub"
-
-    keychain_dir = config["dir"]["keychain"]
-    util.mkdir(keychain_dir)
-    key_path = os.path.join(keychain_dir, source + ".pub")
-
-    if os.path.exists(key_path):
-        if verbose:
-            print(colors.LIGHT_BLACK + f"Skipping already imported key from {source}")
-        return 0
-
-    else:
-        key_path = util.curl_to_file(url + keyname if url[-1] == "/" else f"/{keyname}", key_path)
-        return 1
-
 def test_source(source, url):
     # requesting a resource may not be the best way to do this, caching etc
     start = time.time()
@@ -188,3 +167,28 @@ def sync(args, options, config):
     #for source, url in sources:
         #compelted += 1 
         #util.loading_bar(completed, total, f"Importing keys")
+
+def import_key(name, url, config, verbose=False, root="/"):
+    keychain_dir = util.add_path(root, config["dir"]["keychain"])
+    util.mkdir(keychain_dir)
+    key_path = os.path.join(keychain_dir, name + ".pub")
+
+    if os.path.exists(key_path):
+        print(colors.RED + f"Skipping existing key with name {name}")
+    else:
+        try:
+            key_path = util.curl_to_file(url, key_path)
+            print(colors.GREEN + f"Imported {name}.pub")
+        except Exception as e:
+            print(colors.RED + f"Failed to import key:", colors.DARK_RED + str(e))
+
+def keyimport(args, options, config):
+    if len(args) > 1:
+        alias = args[0]
+        url = args[1]
+        
+        import_key(alias, url, config, verbose=options["v"], root=options["r"])
+
+    else:
+        print(colors.RED + "Usage: keyimport <alias> <url>")
+

@@ -10,9 +10,11 @@ from verbs.info import info
 from verbs.remove import remove
 from verbs.install import install
 from verbs.update import update
+from verbs.sync import keyimport
 
 verbs = { v: globals()[v] for v in [
                 "search",
+                "keyimport",
                 "file",
                 "info",
                 "update",
