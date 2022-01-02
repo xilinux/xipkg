@@ -151,23 +151,6 @@ def sync(args, options, config):
     if new > 0:
         util.fill_line(f"There are {new} new updates", colors.LIGHT_GREEN)
 
-    
-    if "key_authority" in config:
-        imported = 0
-        authorities = config["key_authority"]
-        for authority in authorities:
-            if authority in sources:
-                url = sources[authority]
-                imported += import_key(authority, url, config, verbose=v)
-            elif v:
-                print(colors.RED + f"Cannot find authority {authority} in sources")
-        if imported > 0: print(colors.CYAN + f"Imported keys from {imported} sources")
-    #total = len(sources)
-    #completed = 0
-    #for source, url in sources:
-        #compelted += 1 
-        #util.loading_bar(completed, total, f"Importing keys")
-
 def import_key(name, url, config, verbose=False, root="/"):
     keychain_dir = util.add_path(root, config["dir"]["keychain"])
     util.mkdir(keychain_dir)
