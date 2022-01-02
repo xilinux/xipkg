@@ -54,10 +54,6 @@ def validate_package(package, versions, repo, verbose=False):
             most_popular = p
             p_count = c
 
-    if verbose:
-        ##print(package, ":", popularity)
-        print(most_popular)
-    
     sources = [v[1] for v in versions if v[0] == most_popular]
     # change the packages dict to list all the sources
     return {
