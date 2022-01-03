@@ -321,8 +321,13 @@ def install(args, options, config):
             if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
 
                 for package in to_install:
-                    install_single(package, options, config, verbose=v, unsafe=unsafe)
-                    util.fill_line(f"Installed {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
+                    try:
+                        install_single(package, options, config, verbose=v, unsafe=unsafe)
+                        util.fill_line(f"Installed {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
+                    except Exception as e:
+                        util.fill_line(f"Failed to install {package}", colors.BG_RED + colors.LIGHT_BLACK, end="\n")
+                        util.fill_line(str(e), colors.CLEAR_LINE + colors.RESET + colors.RED, end="\n")
+
 
             else:
                 print(colors.RED + "Action cancelled by user")
