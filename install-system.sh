@@ -18,13 +18,13 @@ mkdir -p $R/usr/lib
 mkdir -p $R/root
 
 cd $R
-ln -s /bin usr/bin
-ln -s /bin sbin
-ln -s /bin usr/sbin
+ln -s usr/bin bin
+ln -s usr/bin sbin
+ln -s usr/bin usr/sbin
 
-ln -s /lib lib
-ln -s /lib lib64
-ln -s /lib usr/lib64
+ln -s usr/lib lib
+ln -s usr/lib lib64
+ln -s usr/lib usr/lib64
 
 ln -s usr/local usr
 

@@ -1,6 +1,7 @@
 import os
 import util
 import colors
+import shutil
 import time
 
 CACHE_DIR = "/var/cache/xipkg"
@@ -131,12 +132,16 @@ def sync(args, options, config):
             for source,ping in speeds.items():
                 file.write(f"{source} {ping}\n")
         
+        repo_dir = os.path.join(config["dir"]["packages"], repo)
+        if os.path.exists(repo_dir):
+            shutil.rmtree(repo_dir)
+
         # find the most popular hash to use
         done = 0 
         total = len(packages.items())
         for package,versions in packages.items():
             info = validate_package(package, versions, repo, verbose=v)
-            if not save_package(package, info, os.path.join(config["dir"]["packages"], repo)):
+            if not save_package(package, info, repo_dir):
                 new += 1
             done += 1
             util.loading_bar(done, total, f"Syncing {repo}")
@@ -144,8 +149,11 @@ def sync(args, options, config):
         util.loading_bar(total, total, f"Synced {repo}")
         print(colors.RESET)
 
-    if new > 0:
-        util.fill_line(f"There are {new} new updates", colors.LIGHT_GREEN)
+    # this isnt new updates for install, this is new packages
+    #if new > 0:
+    #    util.fill_line(f"There are {new} new updates", colors.LIGHT_GREEN)
+
+
 
 def import_key(name, url, config, verbose=False, root="/"):
     keychain_dir = util.add_path(root, config["dir"]["keychain"])
