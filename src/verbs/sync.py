@@ -6,6 +6,9 @@ import time
 
 CACHE_DIR = "/var/cache/xipkg"
 
+# returns a dictionary, and duration:
+#   key: package name
+#   value: list of info [checksum, size]
 def list_packages(url):
     start = time.time()
     status, response = util.curl(url + "/packages.list")
@@ -15,12 +18,13 @@ def list_packages(url):
     else:
         duration /= len(response)
         return {
-                line.split()[0].split(".")[0]: line.split()[1]
+                line.split()[0].split(".")[0]: " ".join(line.split()[1:])
                 for line in response.split("\n") if len(line.split()) >  0
                 }, duration
         
+
 def sync_packages(repo, sources, verbose=False):
-    packages = {}
+    versions = {}
 
     speeds = {}
     for source,url in sources.items():
@@ -29,24 +33,26 @@ def sync_packages(repo, sources, verbose=False):
         if speed > 0:
             speeds[source] = speed
 
-        if len(listed) == 0 and verbose:
-            print(colors.RED + f"No packages found in {source}/{repo}" + colors.RESET)
+        if verbose:
+            if len(listed) == 0:
+                print(colors.RED + f"No packages found in {source}/{repo}" + colors.RESET)
+            else:
+                print(colors.BLACK + f"{len(listed)} packages found in {source}/{repo}" + colors.RESET)
 
         for p in listed:
-            if not p in packages:
-                packages[p] = []
-            packages[p].append((listed[p], source))
+            if not p in versions: versions[p] = []
+            versions[p].append((listed[p], source))
 
-    return packages, speeds
+    return versions, speeds
 
 def validate_package(package, versions, repo, verbose=False):
     popularity = {}
     for v in versions:
-        checksum = v[0]
+        info = v[0]
         source = v[1]
-        if not checksum in popularity:
-            popularity[checksum] = 0
-        popularity[checksum] += 1
+        if not info in popularity:
+            popularity[info] = 0
+        popularity[info] += 1
 
     most_popular = ""
     p_count = -1
@@ -56,11 +62,16 @@ def validate_package(package, versions, repo, verbose=False):
             p_count = c
 
     sources = [v[1] for v in versions if v[0] == most_popular]
+    
     # change the packages dict to list all the sources
-    return {
-            "checksum": most_popular,
+    # maybe some validation here
+    info = {
+            "checksum": most_popular.split()[0],
+            "size": most_popular.split()[1],
+            "files": most_popular.split()[2],
             "sources" : sources
             }
+    return info
 
 def save_package(package, info, location):
     util.mkdir(location)
@@ -75,6 +86,8 @@ def save_package(package, info, location):
     content = ""
     with open(package_file, "w") as file:
         file.write("checksum=" + info["checksum"] + "\n")
+        file.write("size=" + info["size"] + "\n")
+        file.write("files=" + info["files"] + "\n")
         file.write("sources=" + " ".join([source for source in info["sources"]]))
 
     return exists
@@ -139,7 +152,7 @@ def sync(args, options, config):
         # find the most popular hash to use
         done = 0 
         total = len(packages.items())
-        for package,versions in packages.items():
+        for package, versions in packages.items():
             info = validate_package(package, versions, repo, verbose=v)
             if not save_package(package, info, repo_dir):
                 new += 1
