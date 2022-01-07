@@ -65,11 +65,22 @@ def get_unit(n):
     elif n > base**1: return base**1, "KB"
     else: return 1, "B"
 
-def curl_to_file(url, path, text=""):
+def query_size(url):
+    length = 0
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        if r.status_code == 200:
+            length = int(r.headers['content-length']) if "content-length" in r.headers else 0
+        else:
+            length = 0
+    return length
+
+def curl_to_file(url, path, text="", start=0, total=-1):
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
 
         length = int(r.headers['content-length']) if "content-length" in r.headers else 1000
+        if total == -1: total = length
         with open(path, "wb") as f:
 
             c_size = 4096
@@ -78,16 +89,19 @@ def curl_to_file(url, path, text=""):
 
             for chunk in ic:
                 if text:
-                    divisor, unit = get_unit(length)
-                    loading_bar(round(done/divisor, 2), round(length/divisor, 2), "Downloading " + text, unit=unit)
+                    divisor, unit = get_unit(done+start)
+                    loading_bar(round((done+start)/divisor, 2), round(total/divisor, 2), "Downloading " + text, unit=unit)
 
                 f.write(chunk)
                 done += c_size
         if text:
             divisor, unit = get_unit(length)
-            loading_bar(int(done/divisor), int(length/divisor), "Downloaded " + text, unit=unit)
+            
+            # Only print the "Downloaded" text if global download is actually complete
+            if done+start > total:
+                loading_bar(int((done+start)/divisor), int(total/divisor), "Downloaded " + text, unit=unit)
 
-        return r.status_code, path
+        return r.status_code, path, done
 
 
 def mkdir(path):
