@@ -301,7 +301,7 @@ def run_post_install(config, verbose=False, root="/"):
 
 
 def install_single(package, options, config, post_install=True, verbose=False, unsafe=False):
-    checksum, sources, repo = find_package(package, config["repos"],
+    checksum, sources, repo, size, files = find_package(package, config["repos"],
             config["dir"]["packages"], config["sources"])
 
     info = retrieve_package_info(
@@ -316,6 +316,85 @@ def install_single(package, options, config, post_install=True, verbose=False, u
     files = install_package(package, package_path, info, 
             repo, sources[source], key, post_install,
             config, verbose=verbose, root=options["r"])
+
+
+def install_multiple(to_install, args, options, config, terminology=("install", "installed", "installing")):
+    v = options["v"]
+    unsafe = options["u"]
+
+    length = 0
+    total_files = 0
+    infos = []
+    for package in to_install:
+        util.loading_bar(len(infos), len(to_install), "Gathering package infos")
+        checksum, sources, repo, size, filecount = find_package(package, config["repos"],
+                config["dir"]["packages"], config["sources"])
+
+        if checksum != None:
+            info = retrieve_package_info(
+                        sources, checksum, package, config,
+                        verbose=v, skip_verification=unsafe
+                )
+
+            # TODO make package_size be written in package info or sync list instead
+            length += int(size)
+            total_files += int(filecount)
+
+            infos.append(
+                    (package, sources, repo, info)
+                    )
+
+    divisor, unit = util.get_unit(length)
+
+    util.loading_bar(len(infos), len(to_install), "Gathered package infos")
+    print(colors.RESET)
+
+    if not options["y"]:
+        print(colors.BLUE + f"The following packages will be {terminology[1]}:")
+        print(end="\t")
+        for d in to_install:
+            print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
+        print()
+
+        print(colors.BLUE + "Total download size: " + colors.LIGHT_BLUE + str(round(length / divisor, 2)) + unit)
+
+    if options["y"] or util.ask_confirmation(colors.BLUE + "Continue?"):
+        # TODO try catch over each package in each stage so that we can know if there are errors
+
+        downloaded = 0
+        pkg_files = []
+        for package_info in infos:
+            (package, sources, repo, info) = package_info
+
+            package_path, source, key, size = retrieve_package(sources, 
+                    info, package, config, 
+                    completed=downloaded, total_download=length,
+                    verbose=v, skip_verification=unsafe)
+
+            downloaded += size
+
+            pkg_files.append(
+                    (package, package_path, sources[source], key, repo, info)
+                    )
+        
+        util.loading_bar(int(length/divisor), int(length/divisor), "Downloaded packages", unit=unit)
+        print(colors.RESET)
+
+        extracted = 0
+        for f in pkg_files:
+            util.loading_bar(extracted, total_files, terminology[2].capitalize() + " files")
+
+            (package, package_path, source, key, repo, info) = f
+
+            files = install_package(package, package_path, info, 
+                    repo, source, key, True,
+                    config, verbose=v, root=options["r"])
+            extracted += len(files.split("\n"))
+
+        util.loading_bar(extracted, total_files, terminology[1].capitalize() + " files")
+        print(colors.RESET)
+    else:
+        print(colors.RED + "Action cancelled by user")
 
 
 def install(args, options, config):
@@ -345,79 +424,7 @@ def install(args, options, config):
             print()
 
         if len(to_install) > 0:
-            length = 0
-            total_files = 0
-            infos = []
-            for package in to_install:
-                util.loading_bar(len(infos), len(to_install), "Gathering package infos")
-                checksum, sources, repo, size, filecount = find_package(package, config["repos"],
-                        config["dir"]["packages"], config["sources"])
-
-                if checksum != None:
-                    info = retrieve_package_info(
-                                sources, checksum, package, config,
-                                verbose=v, skip_verification=unsafe
-                        )
-
-                    # TODO make package_size be written in package info or sync list instead
-                    length += int(size)
-                    total_files += int(filecount)
-
-                    infos.append(
-                            (package, sources, repo, info)
-                            )
-
-            divisor, unit = util.get_unit(length)
-
-            util.loading_bar(len(infos), len(to_install), "Gathered package infos")
-            print(colors.RESET)
-
-            if not options["y"]:
-                print(colors.BLUE + "The following packages will be installed:")
-                print(end="\t")
-                for d in to_install:
-                    print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
-                print()
-
-                print(colors.BLUE + "Total download size: " + colors.LIGHT_BLUE + str(round(length / divisor, 2)) + unit)
-
-            if options["y"] or util.ask_confirmation(colors.BLUE + "Continue?"):
-                # TODO try catch over each package in each stage so that we can know if there are errors
-
-                downloaded = 0
-                pkg_files = []
-                for package_info in infos:
-                    (package, sources, repo, info) = package_info
-
-                    package_path, source, key, size = retrieve_package(sources, 
-                            info, package, config, 
-                            completed=downloaded, total_download=length,
-                            verbose=v, skip_verification=unsafe)
-
-                    downloaded += size
-
-                    pkg_files.append(
-                            (package, package_path, sources[source], key, repo, info)
-                            )
-                
-                util.loading_bar(int(length/divisor), int(length/divisor), "Downloaded packages", unit=unit)
-                print(colors.RESET)
-
-                extracted = 0
-                for f in pkg_files:
-                    util.loading_bar(extracted, total_files, "Installing files")
-
-                    (package, package_path, source, key, repo, info) = f
-
-                    files = install_package(package, package_path, info, 
-                            repo, source, key, True,
-                            config, verbose=v, root=options["r"])
-                    extracted += len(files.split("\n"))
-
-                util.loading_bar(extracted, total_files, "Installed files")
-                print(colors.RESET)
-            else:
-                print(colors.RED + "Action cancelled by user")
+            install_multiple(to_install, args, options, config)
         else:
             print(colors.LIGHT_RED + "Nothing to do")
     else:

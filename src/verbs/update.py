@@ -3,7 +3,7 @@ import util
 import colors
 import time
 
-from verbs.install import find_package, install_single
+from verbs.install import find_package, install_multiple
 from verbs.sync import sync
 
 VERSION_COMPARED = "CHECKSUM"
@@ -26,7 +26,7 @@ def get_available_version(package_name, config, root="/"):
     repos = config["repos"]
     packages_dir = config["dir"]["packages"]
     sources = config["sources"]
-    checksum, found_sources, requested_repo = find_package(package_name, repos, packages_dir, sources)
+    checksum, found_sources, requested_repo, size, files = find_package(package_name, repos, packages_dir, sources)
     return checksum
     
 def update(args, options, config):
@@ -41,17 +41,7 @@ def update(args, options, config):
         updates = [update for update in updates if update in args]
 
     if len(updates) > 0:
-        print(colors.CLEAR_LINE + colors.RESET, end="")
-        print(colors.BLUE + "The following packages will be updated:")
-        print(end="\t")
-        for d in updates:
-            print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
-        print()
-
-        if util.ask_confirmation(colors.BLUE + "Continue?", no_confirm=options["y"]):
-            for package in updates:
-                install_single(package, options, config, verbose=v, post_install=False, unsafe=options["u"])
-                util.fill_line(f"Updated {package}", colors.BG_CYAN + colors.LIGHT_BLACK, end="\n")
+        install_multiple(updates, args, options, config, terminology=("update", "updated", "updating"))
     else:
         print(colors.LIGHT_RED + "Nothing to do")
 
