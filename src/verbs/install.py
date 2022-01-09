@@ -413,8 +413,16 @@ def install(args, options, config):
     # this check may need to be done sooner?
     if util.is_root() or options["r"] != "/":
         to_install, location_failed = args, []
-        if not options["n"]:
+        if options["n"]:
+            for dep in to_install:
+                dep_checksum, dep_sources, dep_repo, size, files = find_package(dep, config["repos"], config["dir"]["packages"], config["sources"])
+                if dep_checksum is None:
+                    to_install.remove(dep)
+                    location_failed.append(dep)
+    
+        else:
             to_install, location_failed = find_all_dependencies(args, options, config)
+
 
         if len(location_failed) > 0:
             print(colors.LIGHT_RED + "Failed to locate the following packages:")
