@@ -180,7 +180,7 @@ def import_key(name, url, config, verbose=False, root="/"):
             key_path = util.curl_to_file(url, key_path)
             print(colors.GREEN + f"Imported {name}.pub")
         except Exception as e:
-            print(colors.RED + f"Failed to import key:", colors.DARK_RED + str(e))
+            print(colors.RED + f"Failed to import key:", colors.RED + str(e))
 
 def keyimport(args, options, config):
     if len(args) > 1:

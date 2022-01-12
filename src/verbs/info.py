@@ -27,7 +27,7 @@ def info(args, options, config):
 
     if len(args) > 0:
         for package in args:
-            checksum, sources, repo = find_package(package, config["repos"], config["dir"]["packages"], config["sources"])
+            checksum, sources, repo, size, files = find_package(package, config["repos"], config["dir"]["packages"], config["sources"])
 
             if not checksum is None:
                 info = retrieve_package_info(

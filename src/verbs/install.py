@@ -161,7 +161,7 @@ def retrieve_package(sources, package_info, package_name, config, completed=0, t
             else:
                 return package_path, source, "none", size
     print(colors.RESET + colors.RED + f"No valid packages found for {package_name}" + colors.RESET)
-    return ""
+    return "", "", "", 0
 
 def parse_package_info(packageinfo):
     info = {}
@@ -371,6 +371,8 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
                     completed=downloaded, total_download=length,
                     verbose=v, skip_verification=unsafe)
 
+            if package_path == "":
+                print(colors.RED + f"Failed to download {package}")
             downloaded += size
 
             pkg_files.append(
