@@ -20,13 +20,7 @@ def get_installed_info(package, config, options):
 
     return installed_info
 
-
-def info(args, options, config):
-    if not options["l"]:
-        sync(args, options, config)
-
-    if len(args) > 0:
-        for package in args:
+def package_info(package, config, options):
             checksum, sources, repo, size, files = find_package(package, config["repos"], config["dir"]["packages"], config["sources"])
 
             if not checksum is None:
@@ -53,9 +47,25 @@ def info(args, options, config):
                     print(colors.CYAN + "\t\tChecksum: " + colors.LIGHT_CYAN + f"{installed_info['CHECKSUM']}")
                     print(colors.CYAN + "\t\tURL: " + colors.LIGHT_CYAN + f"{installed_info['URL']}")
                     print(colors.CYAN + "\t\tValidation Key: " + colors.LIGHT_CYAN + f"{installed_info['KEY']}")
-
-
             else:
                 print(colors.RED + f"Package {package} could not be found")
+
+
+def info(args, options, config):
+    if not options["l"]:
+        sync(args, options, config)
+
+    if len(args) == 0:
+        installed_path = util.add_path(options["r"], config["dir"]["installed"])
+        installed = os.listdir(installed_path)
+        if len(installed) > 0:
+            [args.append(i) for i in installed]
+        else:
+            print(colors.RED + f"No packages have been specified nor installed")
+
+    for package in args:
+        package_info(package, config, options)
+
+
 
         

@@ -5,6 +5,7 @@ import colors
 
 from verbs.sync import sync
 from verbs.file import file
+from verbs.files import files
 from verbs.search import search
 from verbs.info import info
 from verbs.remove import remove
@@ -16,6 +17,7 @@ verbs = { v: globals()[v] for v in [
                 "search",
                 "keyimport",
                 "file",
+                "files",
                 "info",
                 "update",
                 "install",
