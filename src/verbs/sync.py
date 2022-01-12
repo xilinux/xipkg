@@ -65,12 +65,20 @@ def validate_package(package, versions, repo, verbose=False):
     
     # change the packages dict to list all the sources
     # maybe some validation here
-    info = {
-            "checksum": most_popular.split()[0],
-            "size": most_popular.split()[1],
-            "files": most_popular.split()[2],
-            "sources" : sources
-            }
+    if len(most_popular.split()) > 2:
+        info = {
+                "checksum": most_popular.split()[0],
+                "size": most_popular.split()[1],
+                "files": most_popular.split()[2],
+                "sources" : sources
+                }
+    else:
+        info = {
+                "checksum": most_popular.split()[0],
+                "size": "0",
+                "files": "0",
+                "sources" : sources
+                }
     return info
 
 def save_package(package, info, location):

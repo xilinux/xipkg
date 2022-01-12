@@ -28,9 +28,11 @@ def search(args, options, config):
                 for r in results:
                     print(colors.LIGHT_GREEN + f"\t{r}")
 
+                print(colors.RESET, end="")
                 sys.exit(0)
             else:
                 print(colors.RED + f"Package {package} could not be found")
+                print(colors.RESET, end="")
                 sys.exit(1)
     else:
         print(colors.LIGHT_RED + "Nothing to do")
