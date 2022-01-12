@@ -16,7 +16,7 @@ install: clean xi xipkg.conf default.conf bin/xi
 	mkdir -p $(DESTDIR)/usr/bin
 	cp default.conf $(DESTDIR)/etc/xipkg.d/
 	cp xipkg.conf $(DESTDIR)/etc/xipkg.conf
-	rm $(DESTDIR)/usr/bin/xi
+	rm -f $(DESTDIR)/usr/bin/xi
 	cp bin/xi $(DESTDIR)/usr/bin/xipkg
 	ln -s /usr/bin/xipkg $(DESTDIR)/usr/bin/xi
 
