@@ -3,6 +3,7 @@ import util
 import colors
 import shutil
 import time
+import sys
 
 CACHE_DIR = "/var/cache/xipkg"
 
@@ -16,7 +17,10 @@ def list_packages(url):
     if status != 200:
         return {}, -1
     else:
-        duration /= len(response)
+        if len(response) > 0:
+            duration /= len(response)
+        else:
+            duration = float('inf')
         return {
                 line.split()[0].split(".")[0]: " ".join(line.split()[1:])
                 for line in response.split("\n") if len(line.split()) >  0

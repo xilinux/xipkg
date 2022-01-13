@@ -373,11 +373,12 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
 
             if package_path == "":
                 print(colors.RED + f"Failed to download {package}")
-            downloaded += size
+            else:
+                downloaded += size
 
-            pkg_files.append(
-                    (package, package_path, sources[source], key, repo, info)
-                    )
+                pkg_files.append(
+                        (package, package_path, sources[source], key, repo, info)
+                        )
         
         util.loading_bar(int(length/divisor), int(length/divisor), "Downloaded packages", unit=unit)
         print(colors.RESET)
