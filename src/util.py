@@ -6,8 +6,8 @@ import os
 import hashlib
 import tarfile
 
-DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_CYAN
-DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.CYAN
+DEFAULT_BAR_COLOR = colors.BLACK + colors.BG_WHITE
+DEFAULT_BAR_COLOR_RESET = colors.BG_BLACK + colors.WHITE
 
 def extract_tar(package_path, destination):
     cmd = f"tar -h --no-overwrite-dir -xvf {package_path} -C {destination}"
@@ -37,7 +37,7 @@ def loading_bar(completed, total, text,
     spaces = columns - (len(count) + len(text))
     info = text +  "".join([" " for i in range(spaces)]) + count
 
-    reset_at = int((completed/total)*len(info)) if total > 0 else 0
+    reset_at = int((completed/total)*len(info)) if total > 0 else len(info)
     info = "".join([info[i] + (reset if i == reset_at else "") for i in range(len(info))]) 
 
     print(color + info, end="\r")

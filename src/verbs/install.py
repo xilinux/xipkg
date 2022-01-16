@@ -182,6 +182,27 @@ def parse_package_info(packageinfo):
         index += 1
     return info
 
+def get_available_version(package_name, config, root="/"):
+    repos = config["repos"]
+    packages_dir = config["dir"]["packages"]
+    sources = config["sources"]
+    checksum, found_sources, requested_repo, size, files = find_package(package_name, repos, packages_dir, sources)
+    return checksum
+    
+def get_installed_version(package, config, root="/"):
+
+    installed_info = util.add_path(root, config["dir"]["installed"], package, "info")
+    if os.path.exists(installed_info):
+        with open(installed_info) as file:
+            for line in file:
+                if line.startswith("CHECKSUM"):
+                    return line.strip().split("=")[-1]
+    return None
+
+def update_needed(package, new_checksum, config, root="/"):
+    version = get_installed_version(package, config, root)
+    return not new_checksum == version
+
 def resolve_dependencies(package_info):
     return [
                 dep 
@@ -191,32 +212,27 @@ def resolve_dependencies(package_info):
 
 def find_all_dependencies(package_names, options, config):
     # this is all assuming that the order of deps installed doesn't matter
-    to_check = [p for p in package_names]
-    all_deps = []
     failed = []
+    to_check = [p for p in package_names]
+    dependencies = {}
 
     while len(to_check) > 0:
-        util.loading_bar(len(all_deps), len(all_deps) + len(to_check), "Resolving dependencies...")
+        util.loading_bar(len(dependencies), len(dependencies) + len(to_check), "Resolving dependencies...")
         dep = to_check.pop()
         
         dep_checksum, dep_sources, dep_repo, size, files = find_package(dep, config["repos"], config["dir"]["packages"], config["sources"])
 
         if dep_checksum is not None:
+            dependencies[dep] = dep_checksum
+
             info = retrieve_package_info(
                         dep_sources, dep_checksum, dep, config,
                         verbose=options["v"], skip_verification=options["u"]
                     )
 
             if len(info) > 0:
-                if not dep in all_deps:
-                    all_deps.append(dep)
-                    deps = resolve_dependencies(info)
-                    for d in deps:
-                        if not d in all_deps:
-                            if is_installed(d, config, options["r"]):
-                                if options["v"]: print(colors.YELLOW + f"Package {dep} has already been installed")
-                            else:
-                                to_check.append(d)
+                    [to_check.append(d) for d in resolve_dependencies(info) if not (d in dependencies or d in to_check)]
+
             else:
                 if not dep in failed: failed.append(dep)
                 if options["v"]:
@@ -225,14 +241,22 @@ def find_all_dependencies(package_names, options, config):
             if not dep in failed: failed.append(dep)
             if options["v"]: util.print_reset(colors.CLEAR_LINE + colors.RED + f"Failed to find package {dep}")
 
-    if len(all_deps) > 0:
-        util.loading_bar(len(all_deps), len(all_deps) + len(to_check), "Resolved dependencies")
-        print(colors.RESET)
+    util.loading_bar(len(dependencies), len(dependencies) + len(to_check), "Resolved dependencies")
+    print(colors.RESET)
+
+    to_install = []
+    to_update = []
+    for dep,checksum in dependencies.items():
+        if not is_installed(dep, config, options["r"]):
+            to_install.append(dep)
+        elif update_needed(dep, checksum, config, options["r"]):
+            to_update.append(dep)
 
     # assuming that the latter packages are core dependencies
     # we can reverse the array to reflect the more important packages to install
-    all_deps.reverse()
-    return all_deps, failed
+    to_install.reverse()
+    to_update.reverse()
+    return to_install, to_update, failed
 
 def is_installed(package_name, config, root="/"):
     installed_dir = util.add_path(root, config["dir"]["installed"])
@@ -326,7 +350,7 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
     total_files = 0
     infos = []
     for package in to_install:
-        util.loading_bar(len(infos), len(to_install), "Gathering package infos")
+        util.loading_bar(len(infos), len(to_install), "Preparing Download")
         checksum, sources, repo, size, filecount = find_package(package, config["repos"],
                 config["dir"]["packages"], config["sources"])
 
@@ -346,19 +370,12 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
 
     divisor, unit = util.get_unit(length)
 
-    util.loading_bar(len(infos), len(to_install), "Gathered package infos")
-    print(colors.RESET)
+    util.loading_bar(len(infos), len(to_install), "Preparing Download")
+    print(colors.RESET + colors.CLEAR_LINE, end="\r")
 
-    if not options["y"]:
-        print(colors.BLUE + f"The following packages will be {terminology[1]}:")
-        print(end="\t")
-        for d in to_install:
-            print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
-        print()
+    print(colors.WHITE + "Total download size: " + colors.LIGHT_WHITE + str(round(length / divisor, 2)) + unit)
 
-        print(colors.BLUE + "Total download size: " + colors.LIGHT_BLUE + str(round(length / divisor, 2)) + unit)
-
-    if options["y"] or util.ask_confirmation(colors.BLUE + "Continue?"):
+    if options["y"] or util.ask_confirmation(colors.WHITE + "Continue?"):
         # TODO try catch over each package in each stage so that we can know if there are errors
 
         downloaded = 0
@@ -424,20 +441,43 @@ def install(args, options, config):
                     location_failed.append(dep)
     
         else:
-            to_install, location_failed = find_all_dependencies(args, options, config)
+            to_install, to_update, location_failed = find_all_dependencies(args, options, config)
 
 
         if len(location_failed) > 0:
-            print(colors.LIGHT_RED + "Failed to locate the following packages:")
+            print(colors.RED + "Failed to locate the following packages:")
             print(end="\t")
             for d in location_failed:
                 print(colors.RED if d in args else colors.LIGHT_RED, d, end="")
             print()
 
-        if len(to_install) > 0:
-            install_multiple(to_install, args, options, config)
+        together = []
+        [together.append(p) for p in to_install]
+        [together.append(p) for p in to_update]
+
+        if len(together) > 0:
+
+            if len(to_install) > 0:
+                print(colors.BLUE + f"The following will be installed:")
+                print(end="\t")
+                for d in to_install:
+                    print(colors.BLUE if d in args else colors.LIGHT_BLUE, d, end="")
+                print()
+            if len(to_update) > 0:
+                print(colors.GREEN + f"The following will be updated:")
+                print(end="\t")
+                for d in to_update:
+                    print(colors.GREEN if d in args else colors.LIGHT_GREEN, d, end="")
+                print()
+
+            install_multiple(together, args, options, config)
         else:
-            print(colors.LIGHT_RED + "Nothing to do")
+            installed = " ".join([arg for arg in args
+                if is_installed(arg, config, options["r"])])
+            if len(installed) > 0:
+                print(colors.CYAN + "Already installed", colors.LIGHT_CYAN + installed)
+            else:
+                print(colors.LIGHT_BLACK + "Nothing to do")
     else:
         print(colors.RED + "Root is required to install packages")
 
