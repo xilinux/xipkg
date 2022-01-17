@@ -7,6 +7,23 @@ import sys
 
 CACHE_DIR = "/var/cache/xipkg"
 
+def run_post_install(config, verbose=False, root="/"):
+    if root == "/":
+        installed_dir = util.add_path(root, config["dir"]["postinstall"])
+        if os.path.exists(installed_dir):
+            files = os.listdir(installed_dir)
+            if len(files) > 0:
+                done = 0
+                for file in files:
+                    util.loading_bar(done, len(files), f"Running Postinstalls...")
+                    f = util.add_path(config["dir"]["postinstall"], file)
+                    command = f"sh {f}"
+                    os.chdir("/")
+                    os.system(command)
+                    os.remove(f)
+                    done += 1
+                util.loading_bar(len(files), len(files), f"Run Postinstalls")
+
 # returns a dictionary, and duration:
 #   key: package name
 #   value: list of info [checksum, size]

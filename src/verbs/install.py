@@ -6,7 +6,7 @@ import time
 import requests
 import hashlib
 
-from verbs.sync import sync
+from verbs.sync import sync, run_post_install
 
 def get_best_source(available, sources_list="/var/lib/xipkg/sources"):
     source_speeds = {}
@@ -273,7 +273,7 @@ def install_package(package_name, package_path, package_info,
     # TODO loading bar here
     files = util.extract_tar(package_path, root)
     if post_install:
-        run_post_install(config, verbose=verbose, root=root)
+        run_post_install(config, verbose=verbose, rost=root)
     save_installed_info(package_name, package_info, files, repo, source_url, key, config, root=root)
     return files
 
@@ -309,20 +309,6 @@ def save_installed_info(package_name, package_info,
     files_file = util.add_path(installed_dir, "files")
     with open(files_file, "w") as file:
         file.write(files)
-
-
-def run_post_install(config, verbose=False, root="/"):
-    installed_dir = util.add_path(root, config["dir"]["postinstall"])
-    if os.path.exists(installed_dir):
-        files = os.listdir(installed_dir)
-        for file in files:
-            f = util.add_path(config["dir"]["postinstall"], file)
-            command = f"sh {f}"
-            if root != "/":
-                os.chroot(root)
-            os.chdir("/")
-            os.system(command)
-            os.remove(f)
 
 
 def install_single(package, options, config, post_install=True, verbose=False, unsafe=False):
@@ -408,7 +394,7 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
             (package, package_path, source, key, repo, info) = f
 
             files = install_package(package, package_path, info, 
-                    repo, source, key, True,
+                    repo, source, key, root == "/",
                     config, verbose=v, root=options["r"])
             extracted += len(files.split("\n"))
 
