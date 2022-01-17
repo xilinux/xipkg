@@ -204,11 +204,13 @@ def update_needed(package, new_checksum, config, root="/"):
     return not new_checksum == version
 
 def resolve_dependencies(package_info):
-    return [
+    d = [
                 dep 
-                for dep in re.findall("\w*", package_info["DEPS"]) 
+                for dep in re.findall("[\w,-]*", package_info["DEPS"]) 
                 if len(dep) > 0
             ]
+    print(d)
+    return d 
 
 def find_all_dependencies(package_names, options, config):
     # this is all assuming that the order of deps installed doesn't matter
