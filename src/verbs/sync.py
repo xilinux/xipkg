@@ -23,6 +23,7 @@ def run_post_install(config, verbose=False, root="/"):
                     os.remove(f)
                     done += 1
                 util.loading_bar(len(files), len(files), f"Run Postinstalls")
+                print(colors.RESET)
 
 # returns a dictionary, and duration:
 #   key: package name
@@ -162,6 +163,8 @@ def sync(args, options, config):
     v = options["v"]
 
     new = 0
+
+    run_post_install(config, verbose=options["v"], root=options["r"])
     
     for repo in repos:
         if v: print(colors.LIGHT_BLACK + f"downloading package lists for {repo}...")
