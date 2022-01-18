@@ -1,13 +1,14 @@
 import options
 import config
 import util
+import os
 import colors
 
 from verbs.sync import sync
 from verbs.file import file
 from verbs.files import files
 from verbs.search import search
-from verbs.info import info
+from verbs.info import info, get_installed_info
 from verbs.remove import remove
 from verbs.install import install
 from verbs.update import update
@@ -26,6 +27,34 @@ verbs = { v: globals()[v] for v in [
             ]
         }
 
+def print_stats(conf, opts):
+    pkg_count = {}
+    installed_dir = util.add_path(opts["r"], conf["dir"]["installed"])
+
+    for package in os.listdir(installed_dir):
+        installed_info = get_installed_info(package, conf, opts)
+        repo = installed_info["REPO"]
+        
+        if repo not in pkg_count: pkg_count[repo] = 0
+        pkg_count[repo] += 1
+
+    key_count = len(os.listdir(util.add_path(opts["r"], conf["dir"]["keychain"])))
+
+    total = sum(pkg_count.values())
+
+    distro = util.get_distro()["NAME"]
+
+    print(colors.LIGHT_CYAN + "xipkg", end="")
+    print(colors.CYAN + " on ", end="")
+    print(colors.LIGHT_CYAN + distro) 
+        
+    print(colors.BLUE + f"Total key count: {colors.LIGHT_BLUE}{key_count}")
+    print(colors.BLUE + f"Total package count: {colors.LIGHT_BLUE}{total}")
+
+    for repo,count in pkg_count.items():
+        print(f"\t{colors.BLUE}{repo}: {colors.LIGHT_BLUE}{count}")
+    print(colors.CYAN + "================")
+
 def main():
     opts = options.parse_args()
     args = opts["args"]
@@ -33,7 +62,6 @@ def main():
     if opts["h"]:
         options.print_usage()
         return
-
     
     conf = config.parse_file(opts["c"])
     if len(args) > 0:
@@ -48,7 +76,7 @@ def main():
         except KeyboardInterrupt:
             print(colors.RESET + colors.CLEAR_LINE + colors.RED + "Action cancelled by user")
     else:
-        options.print_usage()
+        print_stats(conf, opts)
         return
 
     print(colors.RESET + colors.CLEAR_LINE, end="")

@@ -8,6 +8,14 @@ import sys
 CACHE_DIR = "/var/cache/xipkg"
 
 def run_post_install(config, verbose=False, root="/"):
+    """ Scan and run postinstall scripts 
+
+    Args:
+        config: (dict) The xipkg config
+        verbose: (bool, optional) Whether to print debug messages
+        root: (str) The system root to begin searching
+    """
+
     if root == "/":
         installed_dir = util.add_path(root, config["dir"]["postinstall"])
         if os.path.exists(installed_dir):
@@ -25,41 +33,65 @@ def run_post_install(config, verbose=False, root="/"):
                 util.loading_bar(len(files), len(files), f"Run Postinstalls")
                 print(colors.RESET)
 
-# returns a dictionary, and duration:
-#   key: package name
-#   value: list of info [checksum, size]
+
 def list_packages(url):
+    """ List all of the packages available in a repo 
+
+    Will return a parsed version of /packages.list and the time it took to retrieve this
+                
+    Args:
+        url: (str) The repository's URL
+
+    Returns:
+        dict: 
+            A dictionary listing all packages and a string of their info summary
+            example: {
+                "linux" : "abcdef 100 200"
+            }
+        int:
+            The time in milliseconds for the request to complete
+    """
+
     start = time.time()
     status, response = util.curl(url + "/packages.list")
     duration = (time.time() - start) * 1000
+
     if status != 200:
         return {}, -1
-    else:
-        if len(response) > 0:
-            duration /= len(response)
-        else:
-            duration = float('inf')
-        return {
-                line.split()[0].split(".")[0]: " ".join(line.split()[1:])
-                for line in response.split("\n") if len(line.split()) >  0
-                }, duration
+
+    return {
+            line.split()[0].split(".")[0]: " ".join(line.split()[1:])
+            for line in response.split("\n") if len(line.split()) >  0
+            }, (duration / len(response)) if len(response) > 0 else float('inf')
         
 
 def sync_packages(repo, sources, verbose=False):
-    versions = {}
+    """
+    Get a list of the versions available for all packages in a repo
 
+    Args:
+        repo: (str) The name of the repo to search
+        sources: (dict) a dictionary of the sources and their urls
+        verbose: (bool, optional) Whether to print debug messages
+    Returns:
+        dict:
+            Versions of each available package
+    """
+
+    versions = {}
     speeds = {}
+
     for source,url in sources.items():
         listed, speed = list_packages(url + repo if url[-1] == "/" else f"/{repo}")
 
-        if speed > 0:
-            speeds[source] = speed
+        if speed > 0: speeds[source] = speed
 
         if verbose:
-            if len(listed) == 0:
-                print(colors.RED + f"No packages found in {source}/{repo}" + colors.RESET)
-            else:
-                print(colors.BLACK + f"{len(listed)} packages found in {source}/{repo}" + colors.RESET)
+                print(
+                        (colors.RED + f"No packages found in {source}/{repo}" + colors.RESET) 
+                        if len(listed) == 0 else 
+                        (colors.BLACK + f"{len(listed)} packages found in {source}/{repo}" + colors.RESET)
+                    )
 
         for p in listed:
             if not p in versions: versions[p] = []
