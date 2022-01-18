@@ -419,7 +419,7 @@ def install(args, options, config):
     # have some interaction with sudo when necessary rather than always require it
     # this check may need to be done sooner?
     if util.is_root() or options["r"] != "/":
-        to_install, location_failed = args, []
+        to_install, to_update, location_failed = args, [], []
         if options["n"]:
             for dep in to_install:
                 dep_checksum, dep_sources, dep_repo, size, files = find_package(dep, config["repos"], config["dir"]["packages"], config["sources"])
