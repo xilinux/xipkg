@@ -394,7 +394,7 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
             (package, package_path, source, key, repo, info) = f
 
             files = install_package(package, package_path, info, 
-                    repo, source, key, root == "/",
+                    repo, source, key, options["r"] == "/",
                     config, verbose=v, root=options["r"])
             extracted += len(files.split("\n"))
 
