@@ -273,7 +273,7 @@ def install_package(package_name, package_path, package_info,
     # TODO loading bar here
     files = util.extract_tar(package_path, root)
     if post_install:
-        run_post_install(config, verbose=verbose, rost=root)
+        run_post_install(config, verbose=verbose, root=root)
     save_installed_info(package_name, package_info, files, repo, source_url, key, config, root=root)
     return files
 
