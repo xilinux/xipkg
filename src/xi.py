@@ -53,7 +53,8 @@ def print_stats(conf, opts):
 
     for repo,count in pkg_count.items():
         print(f"\t{colors.BLUE}{repo}: {colors.LIGHT_BLUE}{count}")
-    print(colors.CYAN + "================")
+    print(colors.RESET)
+
 
 def main():
     opts = options.parse_args()
