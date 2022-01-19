@@ -8,7 +8,7 @@ xi: src/xi.py
 	rm src/xi.zip
 	chmod +x ${XI_BINARY}
 
-install: clean xi xipkg.conf default.conf bin/xi
+install: clean xi xipkg.conf default.conf 
 	mkdir -p $(DESTDIR)/etc/xipkg.d/
 	mkdir -p $(DESTDIR)/usr/bin
 	cp default.conf $(DESTDIR)/etc/xipkg.d/
