@@ -28,10 +28,13 @@ def is_root():
     return os.environ.get("SUDO_UID") or os.geteuid() == 0 
 
 
+def get_area():
+    columns, rows = shutil.get_terminal_size((80, 20))
+
 def loading_bar(completed, total, text, 
         unit="", color=DEFAULT_BAR_COLOR, reset=DEFAULT_BAR_COLOR_RESET):
 
-    columns, rows = shutil.get_terminal_size((80, 20))
+    columns, rows = get_area()
     
     count = f"[{completed}{unit}/{total}{unit}]"
     
@@ -44,7 +47,7 @@ def loading_bar(completed, total, text,
     print(color + info, end="\r")
 
 def fill_line(text, color, end="\n"):
-    columns, rows = shutil.get_terminal_size((80, 20))
+    columns, rows = get_area()
     spaces = columns - (len(text))
     print(color + text +  "".join([" " for i in range(spaces)]), end=end)
 

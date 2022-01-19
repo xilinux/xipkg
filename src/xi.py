@@ -44,6 +44,7 @@ def print_stats(conf, opts):
 
     distro = util.get_distro()["NAME"]
 
+    print(colors.LIGHT_CYAN + ("~"*w) + colors.RESET)
     print(colors.LIGHT_CYAN + "xipkg", end="")
     print(colors.CYAN + " on ", end="")
     print(colors.LIGHT_CYAN + distro) 
@@ -53,7 +54,9 @@ def print_stats(conf, opts):
 
     for repo,count in pkg_count.items():
         print(f"\t{colors.BLUE}{repo}: {colors.LIGHT_BLUE}{count}")
-    print(colors.RESET)
+
+    w, h = util.get_area()
+    print(colors.LIGHT_CYAN + ("~"*w) + colors.RESET)
 
 
 def main():
