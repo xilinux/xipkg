@@ -1,9 +1,6 @@
 XI_BINARY=bin/xi
 SOURCE=src
 
-
-DESTDIR=
-
 xi: src/xi.py
 	mkdir -p bin
 	cd src && zip -r xi.zip *
