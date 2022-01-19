@@ -29,7 +29,7 @@ def is_root():
 
 
 def get_area():
-    columns, rows = shutil.get_terminal_size((80, 20))
+    return shutil.get_terminal_size((80, 20))
 
 def loading_bar(completed, total, text, 
         unit="", color=DEFAULT_BAR_COLOR, reset=DEFAULT_BAR_COLOR_RESET):
