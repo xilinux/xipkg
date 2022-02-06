@@ -370,6 +370,8 @@ def install_multiple(to_install, args, options, config, terminology=("install", 
         for package_info in infos:
             (package, sources, repo, info) = package_info
 
+            if options["v"]:
+                print(colors.BLACK + f"Fetching {package}")
             package_path, source, key, size = retrieve_package(sources, 
                     info, package, config, 
                     completed=downloaded, total_download=length,
