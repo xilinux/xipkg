@@ -36,7 +36,7 @@ def package_info(package, config, options):
                 print(colors.CYAN + "\tDescription: " + colors.LIGHT_CYAN + f"{info['DESCRIPTION']}")
                 print(colors.CYAN + "\tRepo: " + colors.LIGHT_CYAN + f"{repo}")
                 print(colors.CYAN + "\tChecksum: " + colors.LIGHT_CYAN + f"{info['CHECKSUM']}")
-                print(colors.CYAN + "\tVersion Hash: " + colors.LIGHT_CYAN + f"{info['VER_HASH']}")
+                print(colors.CYAN + "\tVersion Hash: " + colors.LIGHT_CYAN + f"{info['VERSION']}")
                 print(colors.CYAN + "\tBuild Date: " + colors.LIGHT_CYAN + f"{info['DATE']}")
                 print(colors.CYAN + "\tSource: " + colors.LIGHT_CYAN + f"{info['SOURCE']}")
                 print(colors.CYAN + "\tDependencies: " + colors.LIGHT_CYAN + f"{info['DEPS']}")

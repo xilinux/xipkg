@@ -289,7 +289,7 @@ def save_installed_info(package_name, package_info,
     description = package_info["DESCRIPTION"] if "DESCRIPTION" in package_info else ""
     installed_checksum = package_info["CHECKSUM"]
     build_date = package_info["DATE"]
-    version = package_info["VER_HASH"]
+    version = package_info["VERSION"]
     installed_date = os.popen("date").read()
 
     package_url = util.add_path(source_url, repo, package_name + ".xipkg")
@@ -467,5 +467,3 @@ def install(args, options, config):
                 print(colors.LIGHT_BLACK + "Nothing to do")
     else:
         print(colors.RED + "Root is required to install packages")
-
-
