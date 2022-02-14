@@ -82,13 +82,6 @@ dep_graph () {
             local package=$(echo $line | cut -d: -f1)
             local new=$(echo $line | cut -d: -f2-)
             echo $new >> $DEP_GRAPH/$package
-            #local existing=$(get_deps $name)
-            
-            #sed -i "/^$package:.*$/d" $DEP_GRAPH
-        
-            #local all=$(echo "$new $existing" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-            #echo "$package: $all" >> $DEP_GRAPH
-            #echo $line >> $DEP_GRAPH
         done < "$tmp_file"
     fi
 }
@@ -117,8 +110,9 @@ popularity_contest () {
 
 index_deps () {
     local l=$1
-    total=${#SOURCES[*]}
-    completed=0
+    local total=${#SOURCES[*]}
+    local completed=0
+
     for src in ${SOURCES[*]}; do
         dep_graph $src
         completed=$((completed+1))
@@ -128,10 +122,10 @@ index_deps () {
 }
 
 index_repo () {
-    local repo=$1
-    local l=$2
-    total=$((${#SOURCES[*]}))
-    completed=0
+    local repo=$1 l=$2
+    local total=${#SOURCES[*]}
+    local completed=0
+
     for src in ${SOURCES[*]}; do
         list_source $repo $src 
         completed=$((completed+1))
@@ -148,22 +142,24 @@ sync () {
     rm -r $DEP_GRAPH
     mkdir $DEP_GRAPH
 
-    i=1
     # create padding spaces for each hbar 
     for repo in ${REPOS[*]}; do 
         hbar
     done
 
+    # download package lists and dep graphs at the same time
     index_deps 0 &
+    local i=1
     for repo in ${REPOS[*]}; do 
         index_repo $repo $i &
         i=$((i+1))
     done
 
-    
+    # wait for all jobs to complete
     wait
-    hbar
 
+    # determine which version of which package should be regarded
+    hbar
     popularity_contest
 }
 
