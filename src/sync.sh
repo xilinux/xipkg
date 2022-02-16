@@ -1,21 +1,5 @@
 #!/bin/bash
 
-export CONF_FILE="/etc/xipkg.conf"
-
-CURL_OPTS="-SsL"
-
-REPOS=($(parseconf -v repos))
-SOURCES=($(parseconf sources.*))
-PACKAGES_DIR=$(parseconf -v dir.packages)
-DEP_GRAPH=$(parseconf -v dir.deps)
-
-TMP_DIR="/tmp/xi"
-
-get_deps() {
-    local name=$1
-    [ -f $DEP_GRAPH ] && sed -rn "s/^$name: (.*)/\1/p" $DEP_GRAPH || echo 
-}
-
 download_file() {
     curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2> /dev/null
 }
@@ -81,7 +65,7 @@ dep_graph () {
         while IFS= read -r line; do
             local package=$(echo $line | cut -d: -f1)
             local new=$(echo $line | cut -d: -f2-)
-            echo $new >> $DEP_GRAPH/$package
+            echo $new >> $DEP_DIR/$package
         done < "$tmp_file"
     fi
 }
@@ -139,8 +123,8 @@ sync () {
     # prepare the file structure for the sync
     mkdir -pv $TMP_DIR
     rm -r $PACKAGES_DIR/*
-    rm -r $DEP_GRAPH
-    mkdir $DEP_GRAPH
+    rm -r $DEP_DIR
+    mkdir $DEP_DIR
 
     # create padding spaces for each hbar 
     for repo in ${REPOS[*]}; do 
@@ -162,5 +146,3 @@ sync () {
     hbar
     popularity_contest
 }
-
-sync
