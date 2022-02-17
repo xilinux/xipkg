@@ -4,7 +4,9 @@ PREFIX=/usr
 CONFDIR=/etc
 
 install: install-config
-	install -m755 ${SOURCE}/xisync.sh ${DESTDIR}${PREFIX}/bin/xisync
+	mkdir -p ${DESTDIR}${PREFIX}/{lib/xipkg,bin}
+	install -m755 ${SOURCE}/*.sh ${DESTDIR}${PREFIX}/lib/xipkg/
+	install -m755 ${SOURCE}/xi.sh ${DESTDIR}${PREFIX}/bin/xi
 
 
 install-config: 
