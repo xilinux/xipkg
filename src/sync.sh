@@ -1,19 +1,5 @@
 #!/bin/bash
 
-download_file() {
-    curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2> /dev/null
-}
-
-wait_for_jobs () {
-    local total=$(jobs -r | wc -l)
-    local completed=0
-    while [ "$completed" != "$total" ]; do
-        completed=$(( $total - $(jobs -r | wc -l)))
-        hbar -T "$1" $completed $total
-    done
-    hbar -t -T "$2" $completed $total
-    wait
-}
 
 # save each listed package in a relevant directory, based on checksum
 #
@@ -42,7 +28,7 @@ list_source () {
     local name=$(echo $src | cut -d":" -f1)
     local repo_url="${url}${repo}"
     local full_url="${repo_url}/packages.list"
-    local tmp_file="$TMP_DIR/$name.$repo"
+    local tmp_file="${SYNC_CACHE}/$name.$repo"
 
     local status=$(download_file $tmp_file $full_url)
     
@@ -58,7 +44,7 @@ dep_graph () {
     local url=$(echo $src | cut -d":" -f2-)
     local name=$(echo $src | cut -d":" -f1)
     local full_url="${url}deps.graph"
-    local tmp_file="$TMP_DIR/$name.deps"
+    local tmp_file="${SYNC_CACHE}/$name.deps.graph"
     [ -f $tmp_file ] && rm $tmp_file; touch $tmp_file
 
     if [ "$(download_file $tmp_file $full_url)" = "200" ]; then
@@ -89,7 +75,7 @@ popularity_contest () {
         contest $package_dir &
     done
 
-    wait_for_jobs "contesting packages..." "contested packages"
+    wait_for_jobs "${LARGE_CIRCLE} contesting packages..." "${CHECKMARK} contested packages"
 }
 
 index_deps () {
@@ -100,9 +86,9 @@ index_deps () {
     for src in ${SOURCES[*]}; do
         dep_graph $src
         completed=$((completed+1))
-        hbar -l $l -T "indexing dependencies..." $completed $total
+        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
     done
-    hbar -l $l -T "indexed dependencies" $completed $total
+    ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} indexed dependencies" $completed $total
 }
 
 index_repo () {
@@ -113,21 +99,22 @@ index_repo () {
     for src in ${SOURCES[*]}; do
         list_source $repo $src 
         completed=$((completed+1))
-        hbar -l $l -T "syncing $repo..." $completed $total
+        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} syncing $repo..." $completed $total
     done
-    hbar -l $l -T "synced $repo" $completed $total
+    ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} synced $repo" $completed $total
 }
 
 
 sync () {
     # prepare the file structure for the sync
-    mkdir -pv $TMP_DIR
-    rm -r $PACKAGES_DIR/*
+    mkdir -p ${SYNC_CACHE}
+
+    [ "$(ls -A $PACKAGES_DIR)" ] && rm -r $PACKAGES_DIR/*
     rm -r $DEP_DIR
     mkdir $DEP_DIR
 
     # create padding spaces for each hbar 
-    for repo in ${REPOS[*]}; do 
+    ${QUIET} || for repo in ${REPOS[*]}; do 
         hbar
     done
 
@@ -135,6 +122,7 @@ sync () {
     index_deps 0 &
     local i=1
     for repo in ${REPOS[*]}; do 
+        mkdir -p ${PACKAGES_DIR}/$repo
         index_repo $repo $i &
         i=$((i+1))
     done

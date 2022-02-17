@@ -22,10 +22,12 @@ resolve_deps () {
             local package=${to_check[-1]}
             unset to_check[-1]
 
-            deps+=($package)
+            #only add if not already added
+            echo ${deps[*]} | grep -q "\b$dep\b" || deps+=($package)
+
             for dep in $(list_deps $package); do
                 # if not already checked
-                if echo ${deps[*]} | grep -qv "\b$dep\b"; then
+                if echo ${deps[@]} | grep -qv "\b$dep\b"; then
                     to_check+=($dep)
                 fi
             done
@@ -38,11 +40,7 @@ resolve_deps () {
 }
 
 get_package_download_info() {
-    tail -1 ${PACKAGES_DIR}/*/$1
-}
-
-get_available_version () {
-    echo "${info[1]}"
+    sed 1q ${PACKAGES_DIR}/*/$1
 }
 
 is_installed() {
@@ -57,14 +55,65 @@ get_installed_version () {
 }
 
 # bad implementation
-exists () {
+package_exists () {
     [ "$(find ${PACKAGES_DIR} -mindepth 2 -name "$1" | wc -l)" != "0" ]
 }
 
-download () {
+download_packages () {
+    local total_download=$1; shift
+    local packages=($@)
+    local outputs=()
+
+    local out_dir="${PACKAGE_CACHE}"
+    mkdir -p "$out_dir"
+
+    for package in ${packages[*]}; do 
+        local info=($(get_package_download_info $package))
+        local url=${info[0]}
+        local checksum=${info[1]}
+
+        local output="${out_dir}/${checksum}.${package}.xipkg"
+        local output_info="${output}.info"
+
+        if validate_checksum $output $checksum; then
+            ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
+        else
+            touch $output
+
+            curl ${CURL_OPTS} -o "$output_info" "$url.info" &
+            curl ${CURL_OPTS} -o "$output" "$url" &
+        fi
+
+        outputs+=($output)
+    done
+
+    wait_for_download $total_download ${outputs[*]}
+
+    
+    local i=0
+    for pkg_file in ${outputs[*]}; do 
+
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i ${#outputs[*]}
+
+        info_file="${pkg_file}.info"
+        if ! validate_sig $pkg_file $info_file; then
+            printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename -s .xipkg $pkg_file)
+            mv "$pkg_file" "${pkg_file}.invalid"
+        else
+            i=$((i+1))
+        fi
+    done
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i ${#outputs[*]}
+
+    install ${outputs[*]}
+
+}
+
+fetch () {
     local requested=($@)
 
     local missing=()
+    local already=()
     local install=()
     local update=()
     local urls=()
@@ -72,7 +121,7 @@ download () {
     local total_download=0
 
     for package in $(resolve_deps $@); do
-        if exists $package; then
+        if package_exists $package; then
             info=($(get_package_download_info $package))
             url=${info[0]}
             checksum=${info[1]}
@@ -80,9 +129,11 @@ download () {
             files=${info[3]}
             
             if is_installed $package; then
-                if [ "$(get_installed_version $package)" != "$(get_available_version $package)" ]; then
+                if [ "$(get_installed_version $package)" != "$checksum" ]; then
                     update+=($package)
                     total_download=$((total_download+size))
+                else
+                    already+=($package)
                 fi
             else
                 install+=($package)
@@ -93,29 +144,48 @@ download () {
         fi
     done
 
-    if [ "${#missing[@]}" != "0" ]; then
-        printf "${LIGHT_RED}The following packages could not be located:"
-        for package in ${missing[*]}; do
-            printf "${RED} $package"
-        done
-        printf "${RESET}\n"
-    fi
-    if [ "${#update[@]}" != "0" ]; then
-        printf "${LIGHT_GREEN}The following packages will be updated:\n\t"
-        for package in ${update[*]}; do
-            printf "${GREEN} $package"
-        done
-        printf "${RESET}\n"
-    fi
-    if [ "${#install[@]}" != "0" ]; then
-        printf "${LIGHT_BLUE}The following packages will be updated:\n\t"
-        for package in ${install[*]}; do
-            printf "${BLUE} $package"
-        done
-        printf "${RESET}\n"
+    if ! ${QUIET}; then
+        if [ "${#missing[@]}" != "0" ]; then
+            printf "${LIGHT_RED}The following packages could not be located:"
+            for package in ${missing[*]}; do
+                printf "${RED} $package"
+            done
+            printf "${RESET}\n"
+        fi
+        if [ "${#update[@]}" != "0" ]; then
+            printf "${LIGHT_GREEN}The following packages will be updated:\n\t"
+            for package in ${update[*]}; do
+                printf "${GREEN} $package"
+            done
+            printf "${RESET}\n"
+        fi
+        if [ "${#install[@]}" != "0" ]; then
+            printf "${LIGHT_BLUE}The following packages will be installed:\n\t"
+            for package in ${install[*]}; do
+                printf "${BLUE} $package"
+            done
+            printf "${RESET}\n"
+        fi
+        if [ "${#already[@]}" != "0" ]; then
+            printf "${LIGHT_WHITE}The following packages are already up to date:\n\t"
+            for package in ${already[*]}; do
+                printf "${WHITE} $package"
+            done
+            printf "${RESET}\n"
+        fi
     fi
 
-    echo "total download size: ${total_download} bytes"
+    [ "${#install[@]}" = "0" ] && [ "${#update[@]}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
+
+         
+    ${QUIET} || [ "${SYSROOT}" = "/" ] || printf "${WHITE}To install to ${LIGHT_WHITE}${SYSROOT}${RESET}\n"
+    ${QUIET} || printf "${WHITE}Total download size:${LIGHT_WHITE} $(format_bytes $total_download)\n"
+
+    if prompt_question "${WHITE}Continue?"; then
+        download_packages $total_download ${install[*]} ${update[*]}
+    else
+        ${QUIET} || printf "${RED}Action canceled by user\n"
+    fi
 }
 
 

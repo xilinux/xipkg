@@ -1,19 +1,17 @@
 #!/bin/bash
 
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
-. ${LIBDIR}/profile.sh
-. ${LIBDIR}/sync.sh
-. ${LIBDIR}/get.sh
 
 export SYSROOT=/
 export CONF_FILE="/etc/xipkg.conf"
 export VERBOSE=false
+export QUIET=false
 export RESOLVE_DEPS=true
 export DO_SYNC=true
 export UNSAFE=false
 export NOCONFIRM=false
 
-while getopts ":r:c:nluyv" opt; do
+while getopts ":r:c:qnluyv" opt; do
     case "${opt}" in
         r)
             SYSROOT="${OPTARG}"
@@ -36,9 +34,40 @@ while getopts ":r:c:nluyv" opt; do
         v)
             VERBOSE=true
             ;;
+        q)
+            QUIET=true
+            ;;
     esac
 done
 
+. ${LIBDIR}/profile.sh
+. ${LIBDIR}/util.sh
+. ${LIBDIR}/validate.sh
+
+. ${LIBDIR}/sync.sh
+. ${LIBDIR}/install.sh
+. ${LIBDIR}/get.sh
+
 shift $((OPTIND-1))
 
-download $@
+if [ "$#" = "0" ]; then
+    echo "xilinux running xipkg (palceholder text)"
+else 
+    
+
+    case "$1" in
+        "sync")
+            sync
+            ;;
+        "install" | "update")
+            shift
+            $DO_SYNC && sync
+            install $@
+            ;;
+        *)
+            $DO_SYNC && sync
+            fetch $@
+            ;;
+    esac
+fi
+printf "${RESET}"
