@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 . /usr/lib/colors.sh &&
     export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"

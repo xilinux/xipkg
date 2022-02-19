@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 extract () {
     tar -h --no-overwrite-dir -vvxf $1 -C ${SYSROOT} | grep ^-

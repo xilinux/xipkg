@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 
 # save each listed package in a relevant directory, based on checksum

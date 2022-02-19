@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
 

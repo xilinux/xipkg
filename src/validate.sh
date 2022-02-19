@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 validate_checksum () {
     local file=$1
