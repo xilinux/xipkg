@@ -67,6 +67,10 @@ run_postinstall () {
 install () {
     local packages=$@
 
+    if [ "$#" = "0" ]; then
+        packages=$(ls ${INSTALLED_DIR})
+    fi
+
     local missing=""
     for package in $packages; do
         [ ! -f $package ] && missing="$missing $(basename $package)"
