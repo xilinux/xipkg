@@ -15,16 +15,20 @@ list_deps() {
 # list all dependencies and sub dependencies of a package
 #
 resolve_deps () {
+    local out="${CACHE_DIR}/deps"
     local deps=""
+    local i=0
     if ${RESOLVE_DEPS}; then
         while [ "$#" != "0" ]; do
 
             # pop a value from the args
             local package=$1
-            shift
 
             #only add if not already added
-            echo ${deps} | grep -q "\b$package\b" || deps="$deps $package"
+            if ! echo ${deps} | grep -q "\b$package\b"; then
+                deps="$deps $package"
+                i=$((i+1))
+            fi
 
             for dep in $(list_deps $package); do
                 # if not already checked
@@ -32,10 +36,13 @@ resolve_deps () {
                     set -- $@ $dep
                 fi
             done
+            shift
+            ${QUIET} || hbar -T "${CHECKMARK} resolving dependencies" $i $((i + $#))
         done
-        echo ${deps}
+        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} resolved dependencies" $i $((i + $#))
+        echo ${deps} > $out
     else
-        echo $@
+        echo $@ > $out
     fi
 
 }
@@ -126,7 +133,11 @@ fetch () {
 
     local total_download=0
 
-    for package in $(resolve_deps $@); do
+    local out="${CACHE_DIR}/deps"
+    touch $out
+    resolve_deps $@
+
+    for package in $(cat $out); do
         if package_exists $package; then
             set -- $(get_package_download_info $package)
             url=$1

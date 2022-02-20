@@ -4,7 +4,8 @@ PREFIX=/usr
 CONFDIR=/etc
 
 install: install-config
-	mkdir -p ${DESTDIR}${PREFIX}/{lib/xipkg,bin}
+	mkdir -p ${DESTDIR}${PREFIX}/bin
+	mkdir -p ${DESTDIR}${PREFIX}/lib/xipkg
 	install -m755 ${SOURCE}/*.sh ${DESTDIR}${PREFIX}/lib/xipkg/
 	install -m755 ${SOURCE}/xi.sh ${DESTDIR}${PREFIX}/bin/xi
 
