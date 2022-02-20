@@ -16,10 +16,6 @@ show_xipkg_stats () {
                 installed=$((installed+1))
         done
 
-        if [ "$repo" = "xi" ]; then
-            installed=35
-        fi
-
         printf "${LIGHT_WHITE}%-7s${GREEN}%*s${LIGHT_WHITE}/%s\n" $repo 10 $installed $total
 
     done
