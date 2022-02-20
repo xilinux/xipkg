@@ -15,10 +15,18 @@ install_package () {
     local checksum="$installed_dir/checksum"
 
     mkdir -p "$installed_dir"
+    [ -f $files ] && mv $files $files.old
     extract $1 > $files
     cp $info_file $info
 
     md5sum $pkg_file | cut -d' ' -f1 > $checksum
+
+    if [ -f "$files.old" ]; then
+        for file in $(diff $files $files.old | grep ^\> | cut -d' ' -f2); do
+            rm -f ${SYSROOT}$file
+        done
+        rm $files.old
+    fi
 }
 
 get_package_filecount() {

@@ -78,7 +78,7 @@ download_packages () {
         local output="${out_dir}/${checksum}.${package}.xipkg"
         local output_info="${output}.info"
 
-        if validate_checksum $output $checksum; then
+        if ${UNSAFE} || validate_checksum $output $checksum; then
             ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
         else
             ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
@@ -94,22 +94,23 @@ download_packages () {
     wait_for_download $total_download ${outputs}
     echo 
 
-    local i=0
-    set -- $outputs
-    for pkg_file in ${outputs}; do 
+    if ! ${UNSAFE}; then
+        local i=0
+        set -- $outputs
+        for pkg_file in ${outputs}; do 
 
-        ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
+            ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
 
-        info_file="${pkg_file}.info"
-        if ! validate_sig $pkg_file $info_file; then
-            printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename -s .xipkg $pkg_file)
-            mv "$pkg_file" "${pkg_file}.invalid"
-        else
-            i=$((i+1))
-        fi
-    done
-    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
-
+            info_file="${pkg_file}.info"
+            if ! validate_sig $pkg_file $info_file; then
+                printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename -s .xipkg $pkg_file)
+                mv "$pkg_file" "${pkg_file}.invalid"
+            else
+                i=$((i+1))
+            fi
+        done
+        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
+    fi
     install $@
 
 }

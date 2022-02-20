@@ -14,7 +14,7 @@ export NOCONFIRM=false
 while getopts ":r:c:qnluyv" opt; do
     case "${opt}" in
         r)
-            SYSROOT="${OPTARG}"
+            SYSROOT=$(realpath ${OPTARG})
             ;;
         c)
             CONF_FILE="${OPTARG}"
@@ -65,6 +65,14 @@ else
         "search")
             shift
             search $@
+            ;;
+        "files")
+            shift
+            files $@
+            ;;
+        "file")
+            shift
+            file $@
             ;;
         *)
             $DO_SYNC && sync
