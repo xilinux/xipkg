@@ -19,6 +19,7 @@ resolve_deps () {
     local deps=""
     local i=0
     if ${RESOLVE_DEPS}; then
+        hbar
         while [ "$#" != "0" ]; do
 
             # pop a value from the args
@@ -67,6 +68,30 @@ package_exists () {
     [ "$(find ${PACKAGES_DIR} -mindepth 2 -name "$1" | wc -l)" != "0" ]
 }
 
+download_package () {
+    local package=$1
+    local output=$2
+
+    local info=$(get_package_download_info $package)
+    set -- $info
+
+    local url=$1
+    local checksum=$2
+
+    local output_info="${output}.info"
+
+    if validate_checksum $output $checksum; then
+        ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
+    else
+        ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
+        touch $output
+
+        (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
+        (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
+    fi
+
+}
+
 download_packages () {
     local total_download=$1; shift
     local packages=$@
@@ -76,25 +101,8 @@ download_packages () {
     mkdir -p "$out_dir"
 
     for package in $packages; do 
-        local info=$(get_package_download_info $package)
-        set -- $info
-
-        local url=$1
-        local checksum=$2
-
         local output="${out_dir}/${checksum}.${package}.xipkg"
-        local output_info="${output}.info"
-
-        if validate_checksum $output $checksum; then
-            ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
-        else
-            ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
-            touch $output
-
-            (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
-            (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
-        fi
-
+        download_package $package $output
         outputs="$outputs $output"
     done
 
@@ -122,7 +130,7 @@ download_packages () {
 
 }
 
-fetch () {
+get () {
     local requested=$@
 
     local missing=""
@@ -161,6 +169,7 @@ fetch () {
         fi
     done
 
+    # TODO tidy this
     if ! ${QUIET}; then
         if [ "${#missing}" != "0" ]; then
             printf "${LIGHT_RED}The following packages could not be located:"
@@ -183,7 +192,7 @@ fetch () {
             done
             printf "${RESET}\n"
         fi
-        if [ "${#already}" != "0" ]; then
+        if [ "${#install}" = "0" ] && [ "${#update}" = 0 ] && [ "${#already}" != "0" ]; then
             printf "${LIGHT_WHITE}The following packages are already up to date:\n\t"
             for package in ${already}; do
                 printf "${WHITE} $package"
@@ -205,4 +214,22 @@ fetch () {
     fi
 }
 
+fetch () {
+    local packages=$@
+    local outputs=""
 
+    local total_download=0
+    for package in $packages; do 
+        if package_exists $package; then
+            set -- $(get_package_download_info $package)
+            size=$3
+            total_download=$((total_download+size))
+
+            local output="${package}.xipkg"
+            download_package $package $output
+            outputs="$outputs $output"
+        fi
+    done
+
+    wait_for_download $total_download ${outputs}
+}

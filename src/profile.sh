@@ -1,7 +1,8 @@
 #!/bin/sh
 
 . /usr/lib/colors.sh &&
-    export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"
+    export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}" &&
+    export HBAR_RED="-c ${BLACK}${BG_RED}"
 
 #. /usr/lib/glyphs.sh
 

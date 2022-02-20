@@ -1,7 +1,16 @@
 #!/bin/sh
 
+
+list () {
+    find ${PACKAGES_DIR} -type f | sed "s,${PACKAGES_DIR}/,," 
+}
+
+list_installed () {
+    ls -1 ${INSTALLED_DIR}
+}
+
 search () {
-    find ${PACKAGES_DIR} -type f | sed "s,${PACKAGES_DIR}/,," | grep $(echo $@ | sed "s/ /\\|/g")
+    list | grep $(echo $@ | sed "s/ /\\|/g")
 }
 
 files () {
@@ -11,7 +20,7 @@ files () {
     done
 }
 
-file () {
+file_info () {
     for file in $@; do
         [ ! -f ${SYSROOT}$file ] && file=$(realpath $file)
         for list in ${INSTALLED_DIR}/*/files; do
@@ -21,3 +30,4 @@ file () {
         done
     done
 }
+

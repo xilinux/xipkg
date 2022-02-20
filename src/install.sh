@@ -78,7 +78,7 @@ install () {
 
     if [ "${#missing}" != "0" ]; then
         # warning: potential recursion loop here
-        fetch $missing
+        get $missing
     else
         
         local total=$(total_filecount $packages)
