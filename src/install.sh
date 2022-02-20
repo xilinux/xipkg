@@ -1,7 +1,7 @@
 #!/bin/sh
 
 extract () {
-    tar -h --no-overwrite-dir -vvxf $1 -C ${SYSROOT} | grep ^-
+    tar -h --no-overwrite-dir -vvxf $1 -C ${SYSROOT} | grep ^- | tr -s " " | cut -d" " -f6 | cut -c2-
 }
 
 install_package () {

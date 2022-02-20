@@ -30,12 +30,15 @@ list_source () {
     local full_url="${repo_url}/packages.list"
     local tmp_file="${SYNC_CACHE}/$name.$repo"
 
+    ${VERBOSE} && printf "${LIGHT_BLACK}Indexing $repo from $full_url\n"
     local status=$(download_file $tmp_file $full_url)
     
-    if [ "$status" = "200" ]; then
+    if [ "$status" = "200" ] ||  [ "$status" = "000" ]; then
         while IFS= read -r line; do
             parse_line $repo $repo_url $line
         done < "$tmp_file"
+    else
+        return 1
     fi
 }
 
@@ -47,7 +50,8 @@ dep_graph () {
     local tmp_file="${SYNC_CACHE}/$name.deps.graph"
     [ -f $tmp_file ] && rm $tmp_file; touch $tmp_file
 
-    if [ "$(download_file $tmp_file $full_url)" = "200" ]; then
+    local status=$(download_file $tmp_file $full_url)
+    if [ "$status" = "200" ] ||  [ "$status" = "000" ]; then
         while IFS= read -r line; do
             local package=$(echo $line | cut -d: -f1)
             local new=$(echo $line | cut -d: -f2-)
@@ -68,6 +72,11 @@ contest () {
 }
 
 popularity_contest () {
+    if [ "$(find $PACKAGES_DIR -type f | wc -l)" = "0" ]; then
+        printf "${RED}No packages found!\n";
+        return 1
+    fi
+
     local list=$(ls -1 -d $PACKAGES_DIR/*/*)
     local total=$(echo $list | wc -l)
 
@@ -75,9 +84,9 @@ popularity_contest () {
     for package_dir in $list; do
         contest $package_dir &
         completed=$((completed+1))
-        hbar -T "${LARGE_CIRCLE} contesting packages..." $completed $total
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} contesting packages..." $completed $total
     done
-    hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} contested packages" $completed $completed
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} contested packages" $completed $completed
 }
 
 index_deps () {
@@ -100,6 +109,7 @@ index_repo () {
     local total=$#
     local completed=0
 
+
     for src in ${SOURCES}; do
         list_source $repo $src 
         completed=$((completed+1))
@@ -107,7 +117,6 @@ index_repo () {
     done
     ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} synced $repo" $completed $total
 }
-
 
 sync () {
     # prepare the file structure for the sync
@@ -117,6 +126,7 @@ sync () {
     rm -r $DEP_DIR
     mkdir $DEP_DIR
 
+    ${VERBOSE} && printf "${LIGHT_BLACK}Syncing\n"
     # create padding spaces for each hbar 
     ${QUIET} || for repo in ${REPOS}; do 
         hbar

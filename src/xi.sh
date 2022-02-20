@@ -44,6 +44,7 @@ done
 . ${LIBDIR}/util.sh
 . ${LIBDIR}/validate.sh
 
+. ${LIBDIR}/query.sh
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
 . ${LIBDIR}/get.sh
@@ -59,8 +60,11 @@ else
             ;;
         "install" | "update")
             shift
-            $DO_SYNC && sync
             install $@
+            ;;
+        "search")
+            shift
+            search $@
             ;;
         *)
             $DO_SYNC && sync

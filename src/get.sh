@@ -81,16 +81,18 @@ download_packages () {
         if validate_checksum $output $checksum; then
             ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
         else
+            ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
             touch $output
 
-            curl ${CURL_OPTS} -o "$output_info" "$url.info" &
-            curl ${CURL_OPTS} -o "$output" "$url" &
+            (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
+            (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
         fi
 
         outputs="$outputs $output"
     done
 
     wait_for_download $total_download ${outputs}
+    echo 
 
     local i=0
     set -- $outputs

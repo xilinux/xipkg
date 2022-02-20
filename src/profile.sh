@@ -7,7 +7,7 @@
 
 export CONF_FILE="/etc/xipkg.conf"
 
-export CURL_OPTS="-SsL"
+export CURL_OPTS="-sL"
 
 export DEP_DIR=$(parseconf -v dir.deps)
 export REPOS="$(parseconf -v repos)"

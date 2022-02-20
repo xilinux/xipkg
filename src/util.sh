@@ -35,7 +35,7 @@ wait_for_download () {
 
         local downloaded=0
         while [ "$downloaded" -lt "$total_download" ]; do
-
+            downloaded=0
             for output in $@; do
                 size=$(stat -c %s $output)
                 downloaded=$((downloaded+size))
@@ -56,8 +56,7 @@ wait_for_extract () {
         shift
 
         while [ "$extracted" -lt "$total_filecount" ]; do
-            local extracted=0
-
+            extracted=0
             for output in $@; do
                 if [ -f $output ]; then
                     size=$(cat $output | wc -l)
