@@ -4,31 +4,39 @@ download_file() {
     curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2> /dev/null
 }
 
+# this function is broken
 wait_for_jobs () {
+    local text=$1
+    local end=$2
+    shift 2
+    joblist="-e $(echo $@ | sed "s/ / -e /g")"
+
+    echo "$joblist"
+
     if ! $QUIET; then
-        local total=$(jobs -r | wc -l)
+        local total=$#
         local completed=0
         while [ "$completed" != "$total" ]; do
-            completed=$(( $total - $(jobs -r | wc -l)))
-            hbar -T "$1" $completed $total
+            running=$(ps aux | grep $joblist | wc -l)
+
+            completed=$(( $total - $running + 1))
+            hbar -T "$text" $completed $total
         done
-        hbar -t ${HBAR_COMPLETE} -T "$2" $completed $total
+        hbar -t ${HBAR_COMPLETE} -T "$end" $completed $total
     fi
 
     wait
 }
 
 wait_for_download () {
-    if ! $QUIET && [ "$(jobs -r | wc -l)" != "0" ]; then
+    if ! $QUIET; then
         local total_download=$1
         shift
-        local files=($@)
 
-        unset downloaded
-        while [ "$(jobs -r | wc -l)" != "0" ]; do
-            local downloaded=0
+        local downloaded=0
+        while [ "$downloaded" -lt "$total_download" ]; do
 
-            for output in ${files[*]}; do
+            for output in $@; do
                 size=$(stat -c %s $output)
                 downloaded=$((downloaded+size))
             done
@@ -42,18 +50,19 @@ wait_for_download () {
 }
 
 wait_for_extract () {
-    if ! $QUIET && [ "$(jobs -r | wc -l)" != "0" ]; then
+    if ! $QUIET; then
         local total_filecount=$1
+        local extracted=0
         shift
-        local files=($@)
 
-        unset extracted
-        while [ "$(jobs -r | wc -l)" != "0" ]; do
+        while [ "$extracted" -lt "$total_filecount" ]; do
             local extracted=0
 
-            for output in ${files[*]}; do
-                size=$(cat $output | wc -l)
-                extracted=$((extracted+size))
+            for output in $@; do
+                if [ -f $output ]; then
+                    size=$(cat $output | wc -l)
+                    extracted=$((extracted+size))
+                fi
             done
 
             hbar -T "  extracting files" $extracted $total_filecount
@@ -64,7 +73,6 @@ wait_for_extract () {
     wait
 }
 
-
 format_bytes () {
     echo $@ | numfmt --to iec    
 
@@ -74,5 +82,5 @@ prompt_question () {
     $NOCONFIRM && return 0
     printf "$1 [Y/n] "
     read response
-    [ "${response:0}" != "n" ]
+    [ "${var%${var#?}}"x != 'nx' ]
 }

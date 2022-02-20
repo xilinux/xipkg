@@ -62,7 +62,7 @@ contest () {
 
     local popular=$(wc -l $package_dir/* | sort -n | head -1 | awk '{ print $2 }' )
 
-    local info_file=$(sed "s/.versions//g" <<< "$package_dir")
+    local info_file=${package_dir%.versions}
     mv $popular $info_file
     rm -r $package_dir
 }
@@ -71,19 +71,22 @@ popularity_contest () {
     local list=$(ls -1 -d $PACKAGES_DIR/*/*)
     local total=$(echo $list | wc -l)
 
+    local completed=0
     for package_dir in $list; do
         contest $package_dir &
+        completed=$((completed+1))
+        hbar -T "${LARGE_CIRCLE} contesting packages..." $completed $total
     done
-
-    wait_for_jobs "${LARGE_CIRCLE} contesting packages..." "${CHECKMARK} contested packages"
+    hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} contested packages" $completed $completed
 }
 
 index_deps () {
     local l=$1
-    local total=${#SOURCES[*]}
+    set -- ${SOURCES}
+    local total=$#
     local completed=0
 
-    for src in ${SOURCES[*]}; do
+    for src in ${SOURCES}; do
         dep_graph $src
         completed=$((completed+1))
         ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
@@ -93,10 +96,11 @@ index_deps () {
 
 index_repo () {
     local repo=$1 l=$2
-    local total=${#SOURCES[*]}
+    set -- ${SOURCES}
+    local total=$#
     local completed=0
 
-    for src in ${SOURCES[*]}; do
+    for src in ${SOURCES}; do
         list_source $repo $src 
         completed=$((completed+1))
         ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} syncing $repo..." $completed $total
@@ -114,14 +118,14 @@ sync () {
     mkdir $DEP_DIR
 
     # create padding spaces for each hbar 
-    ${QUIET} || for repo in ${REPOS[*]}; do 
+    ${QUIET} || for repo in ${REPOS}; do 
         hbar
     done
 
     # download package lists and dep graphs at the same time
     index_deps 0 &
     local i=1
-    for repo in ${REPOS[*]}; do 
+    for repo in ${REPOS}; do 
         mkdir -p ${PACKAGES_DIR}/$repo
         index_repo $repo $i &
         i=$((i+1))

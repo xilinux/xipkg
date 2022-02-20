@@ -22,14 +22,14 @@ install_package () {
 }
 
 get_package_filecount() {
-    local info=($(get_package_download_info $1))
-    echo ${info[3]}
+    set -- $(get_package_download_info $1)
+    echo $4
 }
 
 total_filecount() {
-    local packages=($@)
+    local packages=$@
     local count=0
-    for package in ${packages[*]}; do
+    for package in $packages; do
         local name=$(basename -s .xipkg $package | cut -d. -f2)
         local c=$(get_package_filecount $name)
         count=$((count+c))
@@ -38,25 +38,29 @@ total_filecount() {
 }
 
 install () {
-    local packages=($@)
+    local packages=$@
 
-    local missing=()
-    for package in ${packages[*]}; do
-        [ ! -f $package ] && missing+=($(basename $package))
+    local missing=""
+    for package in $packages; do
+        [ ! -f $package ] && missing="$missing $(basename $package)"
     done
 
-    if [ "${#missing[@]}" != "0" ]; then
+    if [ "${#missing}" != "0" ]; then
         # warning: potential recursion loop here
-        fetch ${missing[*]}
+        fetch $missing
     else
         
-        local total=$(total_filecount ${packages[*]})
-        local files_files=()
-        for package in ${packages[*]}; do
+        local total=$(total_filecount $packages)
+        local files_files=""
+        for package in $packages; do
             local name=$(basename -s .xipkg $package | cut -d. -f2)
             install_package $package $name &
-            files_files+=("${INSTALLED_DIR}/$name/files")
+
+            mkdir -p "${INSTALLED_DIR}/$name/"
+            filelist="${INSTALLED_DIR}/$name/files"
+            touch $filelist
+            files_files="$files_files $filelist"
         done
-        wait_for_extract $total ${files_files[*]}
+        wait_for_extract $total ${files_files}
     fi
 }

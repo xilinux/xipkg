@@ -53,8 +53,6 @@ shift $((OPTIND-1))
 if [ "$#" = "0" ]; then
     echo "xilinux running xipkg (palceholder text)"
 else 
-    
-
     case "$1" in
         "sync")
             sync

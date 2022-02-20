@@ -3,15 +3,15 @@
 . /usr/lib/colors.sh &&
     export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"
 
-. /usr/lib/glyphs.sh
+#. /usr/lib/glyphs.sh
 
 export CONF_FILE="/etc/xipkg.conf"
 
 export CURL_OPTS="-SsL"
 
 export DEP_DIR=$(parseconf -v dir.deps)
-export REPOS=($(parseconf -v repos))
-export SOURCES=($(parseconf sources.*))
+export REPOS="$(parseconf -v repos)"
+export SOURCES="$(parseconf sources.*)"
 
 export PACKAGES_DIR=$(parseconf -v dir.packages)
 export INSTALLED_DIR=${SYSROOT}$(parseconf -v dir.installed)

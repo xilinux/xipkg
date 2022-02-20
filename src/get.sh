@@ -15,24 +15,25 @@ list_deps() {
 # list all dependencies and sub dependencies of a package
 #
 resolve_deps () {
-    local deps=()
-    local to_check=($@)
+    local deps=""
     if ${RESOLVE_DEPS}; then
-        while [ "${#to_check[@]}" != "0" ]; do
-            local package=${to_check[-1]}
-            unset to_check[-1]
+        while [ "$#" != "0" ]; do
+
+            # pop a value from the args
+            local package=$1
+            shift
 
             #only add if not already added
-            echo ${deps[*]} | grep -q "\b$dep\b" || deps+=($package)
+            echo ${deps} | grep -q "\b$package\b" || deps="$deps $package"
 
             for dep in $(list_deps $package); do
                 # if not already checked
-                if echo ${deps[@]} | grep -qv "\b$dep\b"; then
-                    to_check+=($dep)
+                if echo ${deps} | grep -qv "\b$dep\b"; then
+                    set -- $@ $dep
                 fi
             done
         done
-        echo ${deps[@]}
+        echo ${deps}
     else
         echo $@
     fi
@@ -61,16 +62,18 @@ package_exists () {
 
 download_packages () {
     local total_download=$1; shift
-    local packages=($@)
-    local outputs=()
+    local packages=$@
+    local outputs=""
 
     local out_dir="${PACKAGE_CACHE}"
     mkdir -p "$out_dir"
 
-    for package in ${packages[*]}; do 
-        local info=($(get_package_download_info $package))
-        local url=${info[0]}
-        local checksum=${info[1]}
+    for package in $packages; do 
+        local info=$(get_package_download_info $package)
+        set -- $info
+
+        local url=$1
+        local checksum=$2
 
         local output="${out_dir}/${checksum}.${package}.xipkg"
         local output_info="${output}.info"
@@ -84,16 +87,16 @@ download_packages () {
             curl ${CURL_OPTS} -o "$output" "$url" &
         fi
 
-        outputs+=($output)
+        outputs="$outputs $output"
     done
 
-    wait_for_download $total_download ${outputs[*]}
+    wait_for_download $total_download ${outputs}
 
-    
     local i=0
-    for pkg_file in ${outputs[*]}; do 
+    set -- $outputs
+    for pkg_file in ${outputs}; do 
 
-        ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i ${#outputs[*]}
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
 
         info_file="${pkg_file}.info"
         if ! validate_sig $pkg_file $info_file; then
@@ -103,86 +106,86 @@ download_packages () {
             i=$((i+1))
         fi
     done
-    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i ${#outputs[*]}
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
 
-    install ${outputs[*]}
+    install $@
 
 }
 
 fetch () {
-    local requested=($@)
+    local requested=$@
 
-    local missing=()
-    local already=()
-    local install=()
-    local update=()
-    local urls=()
+    local missing=""
+    local already=""
+    local install=""
+    local update=""
+    local urls=""
 
     local total_download=0
 
     for package in $(resolve_deps $@); do
         if package_exists $package; then
-            info=($(get_package_download_info $package))
-            url=${info[0]}
-            checksum=${info[1]}
-            size=${info[2]}
-            files=${info[3]}
+            set -- $(get_package_download_info $package)
+            url=$1
+            checksum=$2
+            size=$3
+            files=$4
             
             if is_installed $package; then
                 if [ "$(get_installed_version $package)" != "$checksum" ]; then
-                    update+=($package)
+                    update="$update $package"
                     total_download=$((total_download+size))
                 else
-                    already+=($package)
+                    already="$already $package"
                 fi
             else
-                install+=($package)
+                install="$install $package"
                 total_download=$((total_download+size))
             fi
         else
-            missing+=($package)
+            missing="$missing $package"
         fi
     done
 
     if ! ${QUIET}; then
-        if [ "${#missing[@]}" != "0" ]; then
+        if [ "${#missing}" != "0" ]; then
             printf "${LIGHT_RED}The following packages could not be located:"
-            for package in ${missing[*]}; do
+            for package in ${missing}; do
                 printf "${RED} $package"
             done
             printf "${RESET}\n"
         fi
-        if [ "${#update[@]}" != "0" ]; then
+        if [ "${#update}" != "0" ]; then
             printf "${LIGHT_GREEN}The following packages will be updated:\n\t"
-            for package in ${update[*]}; do
+            for package in ${update}; do
                 printf "${GREEN} $package"
             done
             printf "${RESET}\n"
         fi
-        if [ "${#install[@]}" != "0" ]; then
+        if [ "${#install}" != "0" ]; then
             printf "${LIGHT_BLUE}The following packages will be installed:\n\t"
-            for package in ${install[*]}; do
+            for package in ${install}; do
                 printf "${BLUE} $package"
             done
             printf "${RESET}\n"
         fi
-        if [ "${#already[@]}" != "0" ]; then
+        if [ "${#already}" != "0" ]; then
             printf "${LIGHT_WHITE}The following packages are already up to date:\n\t"
-            for package in ${already[*]}; do
+            for package in ${already}; do
                 printf "${WHITE} $package"
             done
             printf "${RESET}\n"
         fi
     fi
 
-    [ "${#install[@]}" = "0" ] && [ "${#update[@]}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
+    [ "${#install}" = "0" ] && [ "${#update}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
 
          
     ${QUIET} || [ "${SYSROOT}" = "/" ] || printf "${WHITE}To install to ${LIGHT_WHITE}${SYSROOT}${RESET}\n"
     ${QUIET} || printf "${WHITE}Total download size:${LIGHT_WHITE} $(format_bytes $total_download)\n"
 
     if prompt_question "${WHITE}Continue?"; then
-        download_packages $total_download ${install[*]} ${update[*]}
+        download_packages $total_download ${install} ${update}
     else
         ${QUIET} || printf "${RED}Action canceled by user\n"
     fi
