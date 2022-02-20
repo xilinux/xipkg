@@ -16,7 +16,7 @@ search () {
 files () {
     for package in $@; do
         local file="${INSTALLED_DIR}/$package/files"
-        [ -f $file ] && cat $file || >&2 printf "${RED}Package ${LIGHT_RED}$package${RED} is not installed"
+        [ -f $file ] && cat $file || >&2 printf "${RED}Package ${LIGHT_RED}$package${RED} is not installed\n"
     done
 }
 

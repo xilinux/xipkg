@@ -172,7 +172,7 @@ else
             ;;
         *)
             $DO_SYNC && sync
-            fetch $@
+            install $@
             ;;
     esac
 fi
