@@ -4,7 +4,7 @@
     export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}" &&
     export HBAR_RED="-c ${BLACK}${BG_RED}"
 
-#. /usr/lib/glyphs.sh
+. /usr/lib/glyphs.sh
 
 export CONF_FILE="/etc/xipkg.conf"
 
@@ -22,4 +22,5 @@ export CACHE_DIR=$(parseconf -v dir.cache)
 export PACKAGE_CACHE="${CACHE_DIR}/packages"
 export SYNC_CACHE="${CACHE_DIR}/sync"
 
+. /usr/lib/glyphs.sh
 

@@ -60,6 +60,9 @@ EOF
 
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
 
+[ -f ${LIBDIR}/VERSION ] && VERSION=$(cat ${LIBDIR}/VERSION) || VERSION=
+export VERSION
+
 export SYSROOT=/
 export CONF_FILE="/etc/xipkg.conf"
 export VERBOSE=false
@@ -106,6 +109,7 @@ done
 . ${LIBDIR}/util.sh
 . ${LIBDIR}/validate.sh
 
+. ${LIBDIR}/stats.sh
 . ${LIBDIR}/query.sh
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
@@ -116,7 +120,7 @@ done
 shift $((OPTIND-1))
 
 if [ "$#" = "0" ]; then
-    echo "xilinux running xipkg (palceholder text)"
+    show_xipkg_stats
 else 
     case "$1" in
         "sync")

@@ -148,10 +148,8 @@ get () {
     for package in $(cat $out); do
         if package_exists $package; then
             set -- $(get_package_download_info $package)
-            url=$1
             checksum=$2
             size=$3
-            files=$4
             
             if is_installed $package; then
                 if [ "$(get_installed_version $package)" != "$checksum" ]; then
