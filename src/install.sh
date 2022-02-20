@@ -45,6 +45,25 @@ total_filecount() {
     echo $count
 }
 
+run_postinstall () {
+    postinstall="${SYSROOT}/var/lib/xipkg/postinstall"
+    if [ -d $postinstall ]; then
+        for file in $(ls $postinstall/*.sh); do
+            f=$(basename $file)
+
+            # run the postinstall file
+            #
+            chmod 755 $file
+            [ "${SYSROOT}" = "/" ] &&
+                sh "/var/lib/xipkg/postinstall/$f"  &&
+                rm $file &&
+                printf "${GREEN}run postinstall for $f!\n"
+        done
+        rmdir $postinstall
+    fi
+}
+
+
 install () {
     local packages=$@
 
@@ -70,5 +89,6 @@ install () {
             files_files="$files_files $filelist"
         done
         wait_for_extract $total ${files_files}
+        run_postinstall
     fi
 }

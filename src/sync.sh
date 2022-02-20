@@ -33,7 +33,7 @@ list_source () {
     ${VERBOSE} && printf "${LIGHT_BLACK}Indexing $repo from $full_url\n"
     local status=$(download_file $tmp_file $full_url)
     
-    if [ "$status" = "200" ] ||  [ "$status" = "000" ]; then
+    if [ "$status" = "200" ] ||  [ "$status" = "000" ] && [ -f $tmp_file ]; then
         while IFS= read -r line; do
             parse_line $repo $repo_url $line
         done < "$tmp_file"

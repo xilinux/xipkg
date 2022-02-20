@@ -23,3 +23,36 @@ validate_sig () {
     done
     return 1
 }
+
+
+keyimport () {
+    local keychain=${SYSROOT}${KEYCHAIN_DIR}
+    mkdir -p $keychain
+    case "$#" in 
+        "2")
+            local name=$1
+            local url=$2
+            
+            local keyfile=$keychain/$name.pub
+            printf "${BLUE}Importing $name...${GREEN}"
+            download_file $keyfile $url && 
+                printf "${CHECKMARK}\n" || 
+                printf "${RED}Error occured!\n"      
+            ;;
+        "1")
+            local keyname=$1
+
+            # account for a glob input
+            set +o noglob
+            for key in ${KEYCHAIN_DIR}/$keyname.pub; do 
+                name=$(basename -s .pub $key)
+                cp $key $keychain
+                printf "${GREEN}Imported ${LIGHT_GREEN}$name ${GREEN}to ${SYSROOT}\n" 
+            done
+            ;;
+        *)
+            ls $keychain
+            ;;
+    esac
+    set +o noglob
+}

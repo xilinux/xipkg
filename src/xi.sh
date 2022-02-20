@@ -47,6 +47,7 @@ done
 . ${LIBDIR}/query.sh
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
+. ${LIBDIR}/bootstrap.sh
 . ${LIBDIR}/get.sh
 
 shift $((OPTIND-1))
@@ -70,9 +71,18 @@ else
             shift
             files $@
             ;;
+        "keyimport")
+            shift
+            set -o noglob
+            keyimport $@
+            ;;
         "file")
             shift
             file $@
+            ;;
+        "bootstrap")
+            shift
+            bootstrap $@
             ;;
         *)
             $DO_SYNC && sync

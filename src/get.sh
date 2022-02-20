@@ -28,7 +28,7 @@ resolve_deps () {
 
             for dep in $(list_deps $package); do
                 # if not already checked
-                if echo ${deps} | grep -qv "\b$dep\b"; then
+                if echo $@ | grep -qv "\b$dep\b"; then
                     set -- $@ $dep
                 fi
             done
@@ -78,7 +78,7 @@ download_packages () {
         local output="${out_dir}/${checksum}.${package}.xipkg"
         local output_info="${output}.info"
 
-        if ${UNSAFE} || validate_checksum $output $checksum; then
+        if validate_checksum $output $checksum; then
             ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
         else
             ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
@@ -94,9 +94,9 @@ download_packages () {
     wait_for_download $total_download ${outputs}
     echo 
 
+    set -- $outputs
     if ! ${UNSAFE}; then
         local i=0
-        set -- $outputs
         for pkg_file in ${outputs}; do 
 
             ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
