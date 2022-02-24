@@ -14,23 +14,29 @@ install_package () {
     local files="$installed_dir/files"
     local checksum="$installed_dir/checksum"
 
-    mkdir -p "$installed_dir"
-    [ -f $files ] && mv $files $files.old
-    extract $1 > $files
-    cp $info_file $info
+    local package_checksum=$(md5sum $pkg_file | cut -d' ' -f1)
+    if [ ! -f $checksum ] || [ "$(cat $checksum)" != "$package_checksum" ]; then
+        mkdir -p "$installed_dir"
+        [ -f $files ] && mv $files $files.old
+        extract $1 > $files
 
-    md5sum $pkg_file | cut -d' ' -f1 > $checksum
+        [ -f $info_file ] && cp $info_file $info
 
-    if [ -f "$files.old" ]; then
-        for file in $(diff $files $files.old | grep ^\> | cut -d' ' -f2); do
-            rm -f ${SYSROOT}$file
-        done
-        rm $files.old
+        echo $package_checksum > $checksum
+
+
+        if [ -f "$files.old" ]; then
+            for file in $(diff $files $files.old | grep ^\> | cut -d' ' -f2); do
+                rm -f ${SYSROOT}$file
+            done
+            rm $files.old
+        fi
     fi
 }
 
 get_package_filecount() {
-    set -- $(get_package_download_info $1)
+    local info=$(get_package_download_info $1)
+    set -- $info
     echo $4
 }
 
@@ -66,6 +72,7 @@ run_postinstall () {
 
 install () {
     local packages=$@
+    ${VERBOSE} && printf "${BLACK}Requested to install: $@\n${RESET}"
 
     if [ "$#" = "0" ]; then
         packages=$(ls ${INSTALLED_DIR})
@@ -77,14 +84,16 @@ install () {
     done
 
     if [ "${#missing}" != "0" ]; then
+        ${VERBOSE} && printf "${BLACK}couldnt find: $missing\n${RESET}"
         # warning: potential recursion loop here
         get $missing
     else
         
-        local total=$(total_filecount $packages)
+        local total=$(total_filecount $packages 2>/dev/null || echo 1)
         local files_files=""
         for package in $packages; do
             local name=$(basename -s .xipkg $package | cut -d. -f2)
+            ${VERBOSE} && printf "${BLACK}installing $name from $package \n${RESET}"
             install_package $package $name &
 
             mkdir -p "${INSTALLED_DIR}/$name/"
