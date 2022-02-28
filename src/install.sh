@@ -64,8 +64,8 @@ run_postinstall () {
                 sh "/var/lib/xipkg/postinstall/$f"  &&
                 rm $file &&
                 printf "${GREEN}run postinstall for $f!\n"
-        done
-        rmdir $postinstall
+        done 
+        rmdir $postinstall 2> /dev/null
     fi
 }
 

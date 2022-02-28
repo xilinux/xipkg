@@ -53,7 +53,7 @@ bootstrap () {
 
     sync
 
-    install base linux xipkg $@
+    install $@
 
     import_keys 
 }

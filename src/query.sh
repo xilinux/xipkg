@@ -10,7 +10,11 @@ list_installed () {
 }
 
 search () {
-    list | grep $(echo $@ | sed "s/ /\\|/g")
+    if [ $# = 0 ]; then
+        list
+    else
+        list | grep $(echo $@ | sed "s/ /\\|/g")
+    fi
 }
 
 files () {
