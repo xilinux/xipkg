@@ -30,7 +30,7 @@ remove () {
         local removed=0
         ${QUIET} || hbar
         for file in $(cat $to_remove); do
-            rm -rf $file
+            rm -rf ${SYSROOT}/$file
             
             removed=$((removed+1))
             ${QUIET} || hbar ${HBAR_RED} -T "removing files" $removed $total
