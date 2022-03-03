@@ -14,11 +14,13 @@ install_package () {
     local files="$installed_dir/files"
     local checksum="$installed_dir/checksum"
 
-    local package_checksum=$(md5sum $pkg_file | cut -d' ' -f1)
+    set -- $(md5sum $pkg_file)
+    local package_checksum=$1
     if [ ! -f $checksum ] || [ "$(cat $checksum)" != "$package_checksum" ]; then
         mkdir -p "$installed_dir"
         [ -f $files ] && mv $files $files.old
-        extract $1 > $files
+        ${VERBOSE} && printf "${BLACK}Extracting $name...\n"
+        extract $pkg_file > $files
 
         [ -f $info_file ] && cp $info_file $info
 
@@ -31,6 +33,10 @@ install_package () {
             done
             rm $files.old
         fi
+        return 0
+    else
+        ${VERBOSE} && printf "${BLACK}Skipping $name; already installed...\n"
+        return 1
     fi
 }
 
@@ -60,10 +66,15 @@ run_postinstall () {
             # run the postinstall file
             #
             chmod 755 $file
-            [ "${SYSROOT}" = "/" ] &&
-                sh "/var/lib/xipkg/postinstall/$f"  &&
-                rm $file &&
-                printf "${GREEN}run postinstall for $f!\n"
+            if [ "${SYSROOT}" = "/" ]; then
+                sh "/var/lib/xipkg/postinstall/$f" 
+            else
+                xichroot ${SYSROOT} "/var/lib/xipkg/postinstall/$f" 
+            fi
+
+            rm $file &&
+            printf "${GREEN}run postinstall for $f!\n"
+
         done 
         rmdir $postinstall 2> /dev/null
     fi

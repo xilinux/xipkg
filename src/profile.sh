@@ -22,5 +22,3 @@ export CACHE_DIR=$(parseconf -v dir.cache)
 export PACKAGE_CACHE="${CACHE_DIR}/packages"
 export SYNC_CACHE="${CACHE_DIR}/sync"
 
-. /usr/lib/glyphs.sh
-

@@ -5,6 +5,7 @@ remove () {
 
     local to_remove="${CACHE_DIR}/toremove"
     [ -f $to_remove ] && rm $to_remove
+    touch $to_remove
     local real=""
 
     for package in $@; do
@@ -12,7 +13,9 @@ remove () {
         local filesfile="${package_dir}/files"
         if [ -d $package_dir ]; then 
             [ -f $filesfile ] &&
-                cat $filesfile >> $to_remove
+                while IFS= read -r file; do
+                    echo ${SYSROOT}/$file >> $to_remove
+                done < $filesfile
             echo $package_dir >> $to_remove 
             real="$real $package"
         else
@@ -24,13 +27,14 @@ remove () {
 
     ${QUIET} || printf "${LIGHT_RED}The following packages will be removed from the system:\n\t${RED}%s\n" $real
     ${QUIET} || printf "${LIGHT_RED}Files to remove: ${RED}%s\n" $total
+    ${VERBOSE} && cat $to_remove
 
     if prompt_question "Continue?"; then
 
         local removed=0
         ${QUIET} || hbar
         for file in $(cat $to_remove); do
-            rm -rf ${SYSROOT}/$file
+            rm -rf $file
             
             removed=$((removed+1))
             ${QUIET} || hbar ${HBAR_RED} -T "removing files" $removed $total

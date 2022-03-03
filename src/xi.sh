@@ -105,21 +105,20 @@ while getopts ":r:c:qnluyvh" opt; do
     esac
 done
 
+# TODO only load these modules when needed
 . ${LIBDIR}/profile.sh
 . ${LIBDIR}/util.sh
 . ${LIBDIR}/validate.sh
 
-. ${LIBDIR}/stats.sh
 . ${LIBDIR}/query.sh
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
-. ${LIBDIR}/bootstrap.sh
-. ${LIBDIR}/remove.sh
 . ${LIBDIR}/get.sh
 
 shift $((OPTIND-1))
 
 if [ "$#" = "0" ]; then
+    . ${LIBDIR}/stats.sh
     show_xipkg_stats
 else 
     case "$1" in
@@ -142,6 +141,7 @@ else
             ;;
         "remove")
             shift
+            . ${LIBDIR}/remove.sh
             remove $@
             ;;
         "files")
@@ -165,6 +165,7 @@ else
             ;;
         "bootstrap")
             shift
+            . ${LIBDIR}/bootstrap.sh
             bootstrap $@
             ;;
         "help")
