@@ -39,10 +39,20 @@ remove () {
             removed=$((removed+1))
             ${QUIET} || hbar ${HBAR_RED} -T "removing files" $removed $total
         done
-        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "removing files" $removed $total
+        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "removed files" $removed $total
     else
         ${QUIET} || printf "${LIGHT_BLACK}Action cancled by user\n"
     fi
 
 }
 
+clean () {
+    set -- $(du -sh ${CACHE_DIR})
+    
+    if prompt_question "${LIGHT_RED}Remove ${RED}$1${LIGHT_RED} of cached files?"; then 
+        rm -rf ${CACHE_DIR}/*
+        ${QUIET} || printf "${GREEN}Cleared package cache!\n"
+    else
+        ${QUIET} || printf "${LIGHT_BLACK}Action cancled by user\n"
+    fi
+}

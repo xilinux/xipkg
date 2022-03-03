@@ -38,6 +38,8 @@ Available Commands:
         download a .xipkg file
     keyimport [name] [url]
         import a key from a url
+    clean
+        clean cached files and data
 
     search [query]
         search the database for a package
@@ -152,6 +154,11 @@ else
             shift
             set -o noglob
             keyimport $@
+            ;;
+        "clean")
+            shift
+            . ${LIBDIR}/remove.sh
+            clean $@
             ;;
         "list")
             list
