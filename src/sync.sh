@@ -11,7 +11,7 @@ parse_line() {
     local size=$5
     local files=$6
 
-    local package_name=$(basename -s ".xipkg" $package)
+    local package_name=$(basename $package ".xipkg")
 
     local package_dir="$PACKAGES_DIR/$repo/$package_name.versions"
     local checksum_file=$package_dir/$checksum

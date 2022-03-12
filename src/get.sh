@@ -118,7 +118,7 @@ download_packages () {
 
             info_file="${pkg_file}.info"
             if ! validate_sig $pkg_file $info_file; then
-                printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename -s .xipkg $pkg_file)
+                printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename $pkg_file .xipkg)
                 mv "$pkg_file" "${pkg_file}.invalid"
             else
                 i=$((i+1))

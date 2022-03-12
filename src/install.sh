@@ -50,7 +50,7 @@ total_filecount() {
     local packages=$@
     local count=0
     for package in $packages; do
-        local name=$(basename -s .xipkg $package | cut -d. -f2)
+        local name=$(basename $package .xipkg | cut -d. -f2)
         local c=$(get_package_filecount $name)
         count=$((count+c))
     done
@@ -71,12 +71,13 @@ run_postinstall () {
             else
                 xichroot ${SYSROOT} "/var/lib/xipkg/postinstall/$f" 
             fi
-
-            rm $file &&
-            printf "${GREEN}run postinstall for $f!\n"
-
+            if [ "$?" == "0" ]; then
+                rm $file &&
+                printf "${GREEN}run postinstall for $f!\n"
+            else
+                printf "${RED}failed running postinstall for $f!\n"
+            fi
         done 
-        rmdir $postinstall 2> /dev/null
     fi
 }
 
@@ -103,7 +104,7 @@ install () {
         local total=$(total_filecount $packages 2>/dev/null || echo 1)
         local files_files=""
         for package in $packages; do
-            local name=$(basename -s .xipkg $package | cut -d. -f2)
+            local name=$(basename package .xipkg | cut -d. -f2)
             ${VERBOSE} && printf "${BLACK}installing $name from $package \n${RESET}"
             install_package $package $name &
 
