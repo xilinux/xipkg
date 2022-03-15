@@ -18,34 +18,38 @@ resolve_deps () {
     local out="${CACHE_DIR}/deps"
     local deps=""
     local i=0
-    if ${RESOLVE_DEPS}; then
-        hbar
-        while [ "$#" != "0" ]; do
 
-            # pop a value from the args
-            local package=$1
-
-            #only add if not already added
-            if ! echo ${deps} | grep -q "\b$package\b"; then
-                deps="$deps $package"
-                i=$((i+1))
-            fi
-
-            for dep in $(list_deps $package); do
-                # if not already checked
-                if echo $@ | grep -qv "\b$dep\b"; then
-                    set -- $@ $dep
-                fi
-            done
-            shift
-            ${QUIET} || hbar -T "${CHECKMARK} resolving dependencies" $i $((i + $#))
-        done
-        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} resolved dependencies" $i $((i + $#))
-        echo ${deps} > $out
-    else
+    if ! ${RESOLVE_DEPS}; then
         echo $@ > $out
+        return 0
     fi
 
+    hbar
+    while [ "$#" != "0" ]; do
+
+        # pop a value from the args
+        local package=$1
+
+        #only add if not already added
+        if ! echo ${deps} | grep -q "\b$package\b"; then
+            deps="$deps $package"
+            i=$((i+1))
+        fi
+
+        for dep in $(list_deps $package); do
+            # if not already checked
+            if echo $@ | grep -qv "\b$dep\b"; then
+                set -- $@ $dep
+            fi
+        done
+
+        shift
+
+        ${QUIET} || hbar -T "${CHECKMARK} resolving dependencies" $i $((i + $#))
+    done
+
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} resolved dependencies" $i $((i + $#))
+    echo ${deps} > $out
 }
 
 get_package_download_info() {
@@ -82,14 +86,13 @@ download_package () {
 
     if validate_checksum $output $checksum; then
         ${VERBOSE} && printf "${LIGHT_BLACK}skipping download for %s already exists with checksum %s${RESET}\n" $package $checksum
-    else
-        ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
-        touch $output
-
-        (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
-        (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
+        return 0
     fi
+    ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
+    touch $output
 
+    (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
+    (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
 }
 
 download_packages () {
@@ -110,100 +113,79 @@ download_packages () {
     echo 
 
     set -- $outputs
-    if ! ${UNSAFE}; then
-        local i=0
-        for pkg_file in ${outputs}; do 
 
-            ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
+    local i=0
+    ${UNSAFE} || for pkg_file in ${outputs}; do 
 
-            info_file="${pkg_file}.info"
-            if ! validate_sig $pkg_file $info_file; then
-                printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename $pkg_file .xipkg)
-                mv "$pkg_file" "${pkg_file}.invalid"
-            else
-                i=$((i+1))
-            fi
-        done
-        ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
-    fi
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
+
+        info_file="${pkg_file}.info"
+        if ! validate_sig $pkg_file $info_file; then
+            printf "${RED}Failed to verify signature for ${LIGHT_RED}%s${RED}\n" $(basename $pkg_file .xipkg)
+            mv "$pkg_file" "${pkg_file}.invalid"
+        else
+            i=$((i+1))
+        fi
+    done &&
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
+
     install $@
-
 }
 
 get () {
     local requested=$@
-
-    local missing=""
-    local already=""
-    local install=""
-    local update=""
-    local urls=""
-
+    local missing="" already="" install="" update="" urls=""
     local total_download=0
-
     local out="${CACHE_DIR}/deps"
+
     touch $out
     resolve_deps $@
 
     for package in $(cat $out); do
-        if package_exists $package; then
-            set -- $(get_package_download_info $package)
-            checksum=$2
-            size=$3
-            
-            if is_installed $package; then
-                if [ "$(get_installed_version $package)" != "$checksum" ]; then
-                    update="$update $package"
-                    total_download=$((total_download+size))
-                else
-                    already="$already $package"
-                fi
-            else
-                install="$install $package"
-                total_download=$((total_download+size))
-            fi
-        else
+        if ! package_exists $package; then
             missing="$missing $package"
+            continue
         fi
+
+        set -- $(get_package_download_info $package)
+        checksum=$2
+        size=$3
+        
+        if ! is_installed $package; then
+            install="$install $package"
+            total_download=$((total_download+size))
+            continue
+        fi
+
+        if [ "$(get_installed_version $package)" = "$checksum" ]; then
+            already="$already $package"
+            continue
+        fi
+        update="$update $package"
+        total_download=$((total_download+size))
     done
 
     # TODO tidy this
-    if ! ${QUIET}; then
-        if [ "${#missing}" != "0" ]; then
-            printf "${LIGHT_RED}The following packages could not be located:"
-            for package in ${missing}; do
-                printf "${RED} $package"
-            done
-            printf "${RESET}\n"
-        fi
-        if [ "${#update}" != "0" ]; then
-            printf "${LIGHT_GREEN}The following packages will be updated:\n\t"
-            for package in ${update}; do
-                printf "${GREEN} $package"
-            done
-            printf "${RESET}\n"
-        fi
-        if [ "${#install}" != "0" ]; then
-            printf "${LIGHT_BLUE}The following packages will be installed:\n\t"
-            for package in ${install}; do
-                printf "${BLUE} $package"
-            done
-            printf "${RESET}\n"
-        fi
-        if [ "${#install}" = "0" ] && [ "${#update}" = 0 ] && [ "${#already}" != "0" ]; then
-            printf "${LIGHT_WHITE}The following packages are already up to date:\n\t"
-            for package in ${already}; do
-                printf "${WHITE} $package"
-            done
-            printf "${RESET}\n"
-        fi
-    fi
+    ${QUIET} || {
+        [ "${missing}" ] && 
+            printf "${LIGHT_RED}The following packages could not be located:${RED} %s\n${RESET}" $missing
 
-    [ "${#install}" = "0" ] && [ "${#update}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
+        [ "${update}" ] &&
+            printf "${LIGHT_GREEN}The following packages will be updated:\n\t${GREEN}%s\n${RESET}" $update
 
-         
-    ${QUIET} || [ "${SYSROOT}" = "/" ] || printf "${WHITE}To install to ${LIGHT_WHITE}${SYSROOT}${RESET}\n"
-    ${QUIET} || printf "${WHITE}Total download size:${LIGHT_WHITE} $(format_bytes $total_download)\n"
+        [ "${install}" ] &&
+            printf "${LIGHT_BLUE}The following packages will be installed:\n\t${BLUE}%s\n${RESET}" $install
+
+        [ ! "${install}" ] && [ ! "${update}" ] && [ "${already}" ] &&
+            printf "${LIGHT_WHITE}The following packages are already up to date:\n\t${WHITE}%s\n${RESET}" $already
+    }
+
+    [ ! "${#install}" = "0" ] && [ "${#update}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
+    
+    ${QUIET} || {
+        [ "${SYSROOT}" = "/" ] || printf "${WHITE}To install to ${LIGHT_WHITE}${SYSROOT}${RESET}\n"
+        printf "${WHITE}Total download size:${LIGHT_WHITE} $(format_bytes $total_download)\n"
+    }
 
     if prompt_question "${WHITE}Continue?"; then
         download_packages $total_download ${install} ${update}
@@ -213,8 +195,8 @@ get () {
 }
 
 fetch () {
-    local packages=$@
-    local outputs=""
+    local packages=$@ \
+        outputs=""
 
     local total_download=0
     for package in $packages; do 
@@ -231,3 +213,4 @@ fetch () {
 
     wait_for_download $total_download ${outputs}
 }
+

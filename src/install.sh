@@ -104,7 +104,7 @@ install () {
         local total=$(total_filecount $packages 2>/dev/null || echo 1)
         local files_files=""
         for package in $packages; do
-            local name=$(basename package .xipkg | cut -d. -f2)
+            local name=$(basename $package .xipkg | cut -d. -f2)
             ${VERBOSE} && printf "${BLACK}installing $name from $package \n${RESET}"
             install_package $package $name &
 
@@ -117,3 +117,10 @@ install () {
         run_postinstall
     fi
 }
+
+reinstall () {  
+    local packages=$@
+    remove $@
+    install $@
+}
+

@@ -34,6 +34,8 @@ Available Commands:
         update all packages on the system
     remove [packages...]
         remove packages from the system
+    reinstall [packages..]
+        remove and reinstall package(s) into the system
     fetch [package]
         download a .xipkg file
     keyimport [name] [url]
@@ -116,6 +118,7 @@ done
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
 . ${LIBDIR}/get.sh
+. ${LIBDIR}/remove.sh
 
 shift $((OPTIND-1))
 
@@ -143,8 +146,11 @@ else
             ;;
         "remove")
             shift
-            . ${LIBDIR}/remove.sh
             remove $@
+            ;;
+        "reinstall")
+            shift
+            reinstall $@
             ;;
         "files")
             shift
