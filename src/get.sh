@@ -165,38 +165,39 @@ get () {
         total_download=$((total_download+size))
     done
 
-    # TODO tidy this
     ${QUIET} || {
         [ "${missing}" ] && 
-            printf "${LIGHT_RED}The following packages could not be located:${RED} %s\n${RESET}" $missing
+            printf "${LIGHT_RED}The following packages could not be located:${RED} $missing\n${RESET}"
 
         [ "${update}" ] &&
-            printf "${LIGHT_GREEN}The following packages will be updated:\n\t${GREEN}%s\n${RESET}" $update
+            printf "${LIGHT_GREEN}The following packages will be updated:\n\t${GREEN}$update\n${RESET}"
 
         [ "${install}" ] &&
-            printf "${LIGHT_BLUE}The following packages will be installed:\n\t${BLUE}%s\n${RESET}" $install
+            printf "${LIGHT_BLUE}The following packages will be installed:\n\t${BLUE}$install\n${RESET}"
 
         [ ! "${install}" ] && [ ! "${update}" ] && [ "${already}" ] &&
-            printf "${LIGHT_WHITE}The following packages are already up to date:\n\t${WHITE}%s\n${RESET}" $already
+            printf "${LIGHT_WHITE}The following packages are already up to date:\n\t${WHITE}$already\n${RESET}"
     }
 
-    [ ! "${#install}" = "0" ] && [ "${#update}" = 0 ] && printf "${LIGHT_RED}Nothing to do!\n" && return 0
+    [ "${#install}" = "0" ] && [ "${#update}" = 0 ] && {
+        printf "${LIGHT_RED}Nothing to do!\n"
+        return 0
+    }
     
     ${QUIET} || {
         [ "${SYSROOT}" = "/" ] || printf "${WHITE}To install to ${LIGHT_WHITE}${SYSROOT}${RESET}\n"
         printf "${WHITE}Total download size:${LIGHT_WHITE} $(format_bytes $total_download)\n"
     }
 
-    if prompt_question "${WHITE}Continue?"; then
-        download_packages $total_download ${install} ${update}
-    else
+    prompt_question "${WHITE}Continue?" &&
+    download_packages $total_download ${install} ${update} || {
         ${QUIET} || printf "${RED}Action canceled by user\n"
-    fi
+    }
 }
 
 fetch () {
-    local packages=$@ \
-        outputs=""
+    local packages=$@
+    local outputs=""
 
     local total_download=0
     for package in $packages; do 

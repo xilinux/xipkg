@@ -56,3 +56,20 @@ keyimport () {
     esac
     set +o noglob
 }
+
+validate_files () {
+    local package=$1
+    local ret=0
+
+    # TODO ensure that all checksums are the same
+    for file in $(files $package); do
+        if [ -f "${SYSROOT}$file" ]; then
+            ${VERBOSE} && printf "${GREEN}%s is present\n" $file
+        else
+            ret=$((ret+1))
+            ${QUIET} || printf "${RED}%s is missing\n" $file
+        fi
+    done
+    ${QUIET} || printf "${RESET}"
+    return $ret
+}

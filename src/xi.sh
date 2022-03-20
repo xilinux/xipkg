@@ -47,8 +47,10 @@ Available Commands:
         search the database for a package
     files [package]
         list files belonging to a package
+    verify [package]
+        verify that a package's files are intact
     list
-        list available packagesa
+        list available packages
     list-installed
         lists installed packages
     file [path]
@@ -175,6 +177,14 @@ else
         "file")
             shift
             file_info $@
+            ;;
+        "verify")
+            shift
+            [ -z "$*" ] && set -- $(ls ${INSTALLED_DIR})
+            while [ ! -z "$*" ]; do
+                validate_files $1 || printf "${LIGHT_RED}Failed to verify $1\n"
+                shift
+            done
             ;;
         "bootstrap")
             shift
