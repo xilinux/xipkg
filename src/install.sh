@@ -60,8 +60,8 @@ total_filecount() {
 run_postinstall () {
     postinstall="${SYSROOT}/var/lib/xipkg/postinstall"
     if [ -d $postinstall ]; then
-        for file in $(ls $postinstall); do
-            f=$(basename $file)
+        for f in $(ls $postinstall); do
+            file=$postinstall/$f
 
             # run the postinstall file
             #
