@@ -70,7 +70,7 @@ generating_fstab () {
 building_initramfs () {
     echo "Building initramfs..."
     kernel_version=$(ls $SYSROOT/usr/lib/modules | tail -1)
-    mkdir -p $SYSROOT/var/tmp
+    xichroot $SYSROOT mkdir /var/tmp
     xichroot $SYSROOT dracut --kver $kernel_version 2>$TMPDIR/dracut.log > $TMPDIR/dracut.log
 }
 
