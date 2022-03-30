@@ -78,8 +78,9 @@ installing_bootloader () {
     [ "$r" != "n" ] && {
         opts="--target=x86_64-efi"
     
-        read -p "Enter efi partition: " efi_part
-        opts="$opts --efi-partition=$efi_part"
+        lsblk
+        read -p "Enter efi directory: " efi_part
+        opts="$opts --efi-directory=$efi_part"
 
         read -p "Removable system? [y]" r
         [ "$r" != "n" ] && {
@@ -111,6 +112,7 @@ downloading_additional_packages
 len=$(echo "$steps" | wc -l)
 i=0
 
+echo "Press [return] to enter configuration"
 
 for step in $steps; do
     i=$((i+1))
