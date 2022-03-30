@@ -110,7 +110,6 @@ download_packages () {
     done
 
     wait_for_download $total_download ${outputs}
-    echo 
 
     set -- $outputs
 
