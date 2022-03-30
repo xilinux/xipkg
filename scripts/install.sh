@@ -113,6 +113,7 @@ len=$(echo "$steps" | wc -l)
 i=0
 
 echo "Press [return] to enter configuration"
+read response
 
 for step in $steps; do
     i=$((i+1))
