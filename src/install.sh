@@ -71,7 +71,7 @@ run_postinstall () {
             else
                 xichroot ${SYSROOT} "/var/lib/xipkg/postinstall/$f" 
             fi
-            if [ "$?" == "0" ]; then
+            if [ "$?" = "0" ]; then
                 rm $file &&
                 printf "${GREEN}run postinstall for $f!\n"
             else
