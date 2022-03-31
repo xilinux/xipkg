@@ -121,8 +121,6 @@ for step in $steps; do
     clear
     hbar -t -T "$(echo $step | sed "s/_/ /g")" $i $len
     $step
-    echo "Press [return] to continue"
-    read response
 done
 
 echo "Installation finished!"
