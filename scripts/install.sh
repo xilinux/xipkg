@@ -1,6 +1,6 @@
 #!/bin/sh
 
-default_packages="base linux xipkg dracut grub"
+default_packages="base linux xipkg dracut grub bash"
 additional_packages="sudo neofetch vim networkmanager"
 default_key="davidovski https://xi.davidovski.xyz/keychain/xi.pub"
 
@@ -38,7 +38,7 @@ configuring_users () {
     echo
     echo "Creating user"
     read -p "Enter username: " username
-    xichroot $SYSROOT useradd -m $username
+    xichroot $SYSROOT useradd -s /bin/bash -m $username
     xichroot $SYSROOT passwd $username
 }
 
@@ -79,7 +79,7 @@ installing_bootloader () {
     [ "$r" != "n" ] && {
         opts="--target=x86_64-efi"
     
-        lsblk
+        xichroot $SYSROOT lsblk
         read -p "Enter efi directory: " efi_part
         opts="$opts --efi-directory=$efi_part"
 
