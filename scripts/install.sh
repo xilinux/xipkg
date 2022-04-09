@@ -9,6 +9,8 @@ XIFLAGS="-yl"
 TMPDIR=/tmp
 SYSROOT=$1
 
+umask 0022
+
 [ ! -e $XIPKG ] && {
     git clone https://xi.davidovski.xyz/git/xiutils.git $TMPDIR/xiutils
     make && make install
