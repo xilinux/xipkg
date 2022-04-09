@@ -4,6 +4,7 @@ remove () {
     local packages=$@
 
     local to_remove="${CACHE_DIR}/toremove"
+    [ -d ${CACHE_DIR} ] || mkdir -p ${CACHE_DIR}
     [ -f $to_remove ] && rm $to_remove
     touch $to_remove
     local real=""

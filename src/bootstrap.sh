@@ -23,6 +23,15 @@ create_directories () {
     ln -s usr/lib ${SYSROOT}/usr/lib64
 
     ln -s usr ${SYSROOT}/usr/local
+    chmod 0755 ${SYSROOT}/dev
+    chmod 1777 ${SYSROOT}/tmp
+    chmod 0555 ${SYSROOT}/sys
+    chmod 0555 ${SYSROOT}/proc
+    chmod 0755 ${SYSROOT}/run
+    chmod 0755 ${SYSROOT}/usr
+    chmod 0750 ${SYSROOT}/root
+    chmod 0755 ${SYSROOT}/usr/bin
+    chmod 0755 ${SYSROOT}/usr/lib
 }
 
 import_keys () {
