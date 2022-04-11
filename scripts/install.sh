@@ -66,7 +66,7 @@ EOF
 
 generating_fstab () {
     echo "Generating fstab..."
-    xichroot $SYSCONFIG genfstab -U / > $SYSROOT/etc/fstab
+    xichroot $SYSROOT genfstab -U / > $SYSROOT/etc/fstab
 }
 
 building_initramfs () {
@@ -95,20 +95,28 @@ installing_bootloader () {
     }
 }
 
+fixing_permissions () {
+    xichroot $SYSROOT chmod 755 /
+    xichroot $SYSROOT chmod 755 /usr
+    xichroot $SYSROOT chmod 755 /usr/bin
+    xichroot $SYSROOT chmod 755 /usr/lib
+}
+
 downloading_additional_packages () {
     echo "Syncing repos..."
     xichroot $SYSROOT xi sync
     echo "Downloading additional packages..."
-    xichroot $SYSROOT xi $XIFLAGS install $additional_packages
+    xi -r $SYSROOT $XIFLAGS install $additional_packages
 }
 
 steps="
+configuring_nameservers
 generating_fstab
 building_initramfs
 configuring_system
 installing_bootloader
 configuring_users
-configuring_nameservers
+fixing_permissions
 downloading_additional_packages
 "
 

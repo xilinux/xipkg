@@ -32,6 +32,7 @@ create_directories () {
     chmod 0750 ${SYSROOT}/root
     chmod 0755 ${SYSROOT}/usr/bin
     chmod 0755 ${SYSROOT}/usr/lib
+    chmod 0755 ${SYSROOT}/
 }
 
 import_keys () {
