@@ -23,3 +23,4 @@ export PACKAGE_CACHE="${CACHE_DIR}/packages"
 export SYNC_CACHE="${CACHE_DIR}/sync"
 
 export LOG_FILE="/var/log/xipkg.log"
+[ ! -f ${LOG_FILE} ] && mkdir -p /var/log && touch ${LOG_FILE}
