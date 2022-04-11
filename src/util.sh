@@ -1,7 +1,7 @@
 #!/bin/sh
 
 download_file() {
-    curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2> /dev/null
+    curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2>> ${LOG_FILE}
 }
 
 # this function is broken

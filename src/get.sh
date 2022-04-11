@@ -91,8 +91,8 @@ download_package () {
     ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
     touch $output
 
-    (curl ${CURL_OPTS} -o "$output_info" "$url.info" || printf "${RED}Failed to download info for %s\n" $package) &
-    (curl ${CURL_OPTS} -o "$output" "$url" || printf "${RED}Failed to download %s\n" $package) &
+    (curl ${CURL_OPTS} -o "$output_info" "$url.info" 2>> ${LOG_FILE} || printf "${RED}Failed to download info for %s\n" $package) &
+    (curl ${CURL_OPTS} -o "$output" "$url" 2>> ${LOG_FILE} || printf "${RED}Failed to download %s\n" $package) &
 }
 
 download_packages () {

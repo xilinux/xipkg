@@ -8,7 +8,7 @@
 
 export CONF_FILE="/etc/xipkg.conf"
 
-export CURL_OPTS="-sL"
+export CURL_OPTS="-sSL"
 
 export DEP_DIR=$(parseconf -v dir.deps)
 export REPOS="$(parseconf -v repos)"
@@ -22,3 +22,4 @@ export CACHE_DIR=$(parseconf -v dir.cache)
 export PACKAGE_CACHE="${CACHE_DIR}/packages"
 export SYNC_CACHE="${CACHE_DIR}/sync"
 
+export LOG_FILE="/var/log/xipkg.log"
