@@ -1,7 +1,7 @@
 #!/bin/sh
 
 extract () {
-    tar -h -p --no-overwrite-dir -vvxf $1 -C ${SYSROOT} 2>/dev/null | grep ^- | tr -s " " | cut -d" " -f6 | cut -c2- 
+    tar -h --keep-old-files -p -vvxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep ^- | tr -s " " | cut -d" " -f6 | cut -c2- 
 }
 
 install_package () {
@@ -17,32 +17,28 @@ install_package () {
     set -- $(md5sum $pkg_file)
     local package_checksum=$1
     if [ ! -f $checksum ] || [ "$(cat $checksum)" != "$package_checksum" ]; then
-        mkdir -p "$installed_dir"
-        [ -f $files ] && mv $files $files.old
+        [ ! -d $installed_dir ] && mkdir -p "$installed_dir"
+
+        [ -f "$files" ] && {
+            for file in $(cat $files); do
+                rm -f ${SYSROOT}$file
+            done
+            rm $files
+        }
+
         ${VERBOSE} && printf "${BLACK}Extracting $name...\n"
         extract $pkg_file > $files
 
         [ -f $info_file ] && cp $info_file $info
-
         echo $package_checksum > $checksum
-
-
-        if [ -f "$files.old" ]; then
-            for file in $(diff $files $files.old | grep ^\> | cut -d' ' -f2); do
-                rm -f ${SYSROOT}$file
-            done
-            rm $files.old
-        fi
         return 0
-    else
-        ${VERBOSE} && printf "${BLACK}Skipping $name; already installed...\n"
-        return 1
     fi
+    ${VERBOSE} && printf "${BLACK}Skipping $name; already installed...\n"
+    return 1
 }
 
 get_package_filecount() {
-    local info=$(get_package_download_info $1)
-    set -- $info
+    set -- $(get_package_download_info $1)
     echo $4
 }
 

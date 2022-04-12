@@ -1,6 +1,5 @@
 #!/bin/sh
 
-
 # list all direct dependencies of a package
 #
 list_deps() {
@@ -52,14 +51,23 @@ resolve_deps () {
     echo ${deps} > $out
 }
 
+# get the download info for a package ($1)
+#
+# in format:
+#  url checksum size files 
+#
 get_package_download_info() {
     sed 1q ${PACKAGES_DIR}/*/$1
 }
 
+# return if a package is present on the system or not
+#
 is_installed() {
     [ -f "${INSTALLED_DIR}/$1/checksum" ]
 }
 
+# get the installed checksum of a package ($1)
+#
 get_installed_version () {
     local name=$1
     local file="${INSTALLED_DIR}/$name/checksum"
@@ -91,30 +99,37 @@ download_package () {
     ${VERBOSE} && printf "${LIGHT_BLACK}downloading $package from $url\n" $package $checksum
     touch $output
 
-    (curl ${CURL_OPTS} -o "$output_info" "$url.info" 2>> ${LOG_FILE} || printf "${RED}Failed to download info for %s\n" $package) &
-    (curl ${CURL_OPTS} -o "$output" "$url" 2>> ${LOG_FILE} || printf "${RED}Failed to download %s\n" $package) &
+    (curl ${CURL_OPTS} -o "$output_info" "$url.info" 2>> ${LOG_FILE} || printf "${RED}Failed to download info for %s\n" $package) 
+    (curl ${CURL_OPTS} -o "$output" "$url" 2>> ${LOG_FILE} || printf "${RED}Failed to download %s\n" $package) 
 }
 
+# download a list of packages
+# will download, verify and install the packages
+#
+# total_download: total number of bytes to download
+# packages: list of packages by name to download
+#
 download_packages () {
     local total_download=$1; shift
-    local packages=$@
     local outputs=""
 
     local out_dir="${PACKAGE_CACHE}"
     mkdir -p "$out_dir"
 
-    for package in $packages; do 
-        local output="${out_dir}/${checksum}.${package}.xipkg"
-        download_package $package $output
-        outputs="$outputs $output"
+    for package in $@; do 
+        outputs="$outputs ${out_dir}/${checksum}.${package}.xipkg" 
     done
+    fetch_serial $total_download $outputs
 
-    wait_for_download $total_download ${outputs}
+    validate_downloads $outputs
+}
 
-    set -- $outputs
-
+# validate signatures of downloaded packages
+#
+# outputs: list of xipkg files to verify and install
+validate_downloads () {
     local i=0
-    ${UNSAFE} || for pkg_file in ${outputs}; do 
+    ${UNSAFE} || for pkg_file in $@; do 
 
         ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
 
@@ -131,6 +146,8 @@ download_packages () {
     install $@
 }
 
+# get and install requested packages
+#
 get () {
     local requested=$@
     local missing="" already="" install="" update="" urls=""
@@ -194,23 +211,45 @@ get () {
     }
 }
 
+# just fetch the xipkg files of requested packages
+#
 fetch () {
-    local packages=$@
     local outputs=""
-
     local total_download=0
-    for package in $packages; do 
-        if package_exists $package; then
+    for package in $@; do 
+        package_exists $package && {
             set -- $(get_package_download_info $package)
-            size=$3
-            total_download=$((total_download+size))
-
-            local output="${package}.xipkg"
-            download_package $package $output
-            outputs="$outputs $output"
-        fi
+            total_download=$((total_download+$3))
+            outputs="$outputs ${package}.xipkg"
+        }
     done
 
-    wait_for_download $total_download ${outputs}
+    fetch_serial $total_download $outputs
 }
 
+# fetch package files in serial
+#
+# total_download: total number of bytes to download
+# outputs: list of package files to output to
+#
+fetch_serial () {
+    wait_for_download $@ &
+    shift
+    for output in $@; do 
+        download_package $(basename ${output%.*} | cut -d. -f2) $output 
+    done
+}
+
+# fetch package files in parallel
+#
+# total_download: total number of bytes to download
+# outputs: list of package files to output to
+#
+fetch_parallel () {
+    local total_download=$1
+    shift
+    for output in $@; do 
+        download_package $(basename ${output%.*} | cut -d. -f2) $output &
+    done
+    wait_for_download total_download $@ &
+}

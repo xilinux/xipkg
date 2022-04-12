@@ -37,7 +37,11 @@ wait_for_download () {
         while [ "$downloaded" -lt "$total_download" ]; do
             downloaded=0
             for output in $@; do
-                size=$(stat -t $output | cut -d" " -f2)
+                [ -f $output ] && {
+                    size=$(stat -t $output | cut -d" " -f2)
+                } || {
+                    size=0
+                }
                 downloaded=$((downloaded+size))
             done
 

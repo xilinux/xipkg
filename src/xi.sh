@@ -64,6 +64,7 @@ Available Commands:
 EOF
 }
 
+
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
 
 [ -f ${LIBDIR}/VERSION ] && VERSION=$(cat ${LIBDIR}/VERSION) || VERSION=
@@ -128,6 +129,12 @@ if [ "$#" = "0" ]; then
     . ${LIBDIR}/stats.sh
     show_xipkg_stats
 else 
+    # showing stats doesn't require root, so we can only check when we are here
+    [ ! "$EUID" == 0 ] && {
+        printf "${RED}Please run as root!\n"
+        exit 1
+    }
+    # todo check for permissions when we need them and ask them per request
     case "$1" in
         "sync")
             sync

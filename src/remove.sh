@@ -49,11 +49,10 @@ remove () {
 
 clean () {
     set -- $(du -sh ${CACHE_DIR})
-    
-    if prompt_question "${LIGHT_RED}Remove ${RED}$1${LIGHT_RED} of cached files?"; then 
+    prompt_question "${LIGHT_RED}Remove ${RED}$1${LIGHT_RED} of cached files?" && {
         rm -rf ${CACHE_DIR}/*
         ${QUIET} || printf "${GREEN}Cleared package cache!\n"
-    else
+    } || {
         ${QUIET} || printf "${LIGHT_BLACK}Action cancled by user\n"
-    fi
+    }
 }
