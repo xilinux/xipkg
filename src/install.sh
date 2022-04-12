@@ -69,9 +69,9 @@ run_postinstall () {
             fi
             if [ "$?" = "0" ]; then
                 rm $file &&
-                printf "${GREEN}run postinstall for $f!\n"
+                printf "${GREEN}${CHECKMARK} run postinstall for $f!\n"
             else
-                printf "${RED}failed running postinstall for $f!\n"
+                printf "${RED}${CROSSMARK} failed running postinstall for $f!\n"
             fi
         done 
     fi

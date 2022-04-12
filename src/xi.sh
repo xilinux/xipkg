@@ -130,7 +130,7 @@ if [ "$#" = "0" ]; then
     show_xipkg_stats
 else 
     # showing stats doesn't require root, so we can only check when we are here
-    [ "$(id -u)" == "0" ] || {
+    [ "$(id -u)" = "0" ] || {
         printf "${RED}Please run as root!\n"
         exit 1
     }
