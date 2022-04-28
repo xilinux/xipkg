@@ -10,7 +10,7 @@ install: install-config
 	install -m755 ${SOURCE}/xi.sh ${DESTDIR}${PREFIX}/bin/xi
 	git describe --always > ${DESTDIR}${PREFIX}/lib/xipkg/VERSION
 
-install-config: 
+install-config:
 	mkdir -p $(DESTDIR)${CONFDIR}/xipkg.d/
 	cp default.conf $(DESTDIR)${CONFDIR}/xipkg.d/
 	cp xipkg.conf $(DESTDIR)${CONFDIR}/xipkg.conf

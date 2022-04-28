@@ -63,6 +63,12 @@ Available Commands:
         shows this message
 EOF
 }
+checkroot () {
+    [ "$(id -u)" = "0" ] || {
+        printf "${RED}Please run as root!\n"
+        exit 1
+    }
+}
 
 
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
@@ -130,17 +136,15 @@ if [ "$#" = "0" ]; then
     show_xipkg_stats
 else 
     # showing stats doesn't require root, so we can only check when we are here
-    [ "$(id -u)" = "0" ] || {
-        printf "${RED}Please run as root!\n"
-        exit 1
-    }
     # todo check for permissions when we need them and ask them per request
     case "$1" in
         "sync")
+            checkroot
             sync
             ;;
         "install" | "update")
             shift
+            checkroot
             $DO_SYNC && sync
             install $@
             ;;
@@ -150,15 +154,18 @@ else
             ;;
         "fetch")
             shift
+            checkroot
             $DO_SYNC && sync
             fetch $@
             ;;
         "remove")
             shift
+            checkroot
             remove $@
             ;;
         "reinstall")
             shift
+            checkroot
             reinstall $@
             ;;
         "files")
@@ -167,11 +174,13 @@ else
             ;;
         "keyimport")
             shift
+            checkroot
             set -o noglob
             keyimport $@
             ;;
         "clean")
             shift
+            checkroot
             . ${LIBDIR}/remove.sh
             clean $@
             ;;
@@ -195,6 +204,7 @@ else
             ;;
         "bootstrap")
             shift
+            checkroot
             . ${LIBDIR}/bootstrap.sh
             bootstrap $@
             ;;

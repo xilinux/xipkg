@@ -5,7 +5,7 @@ additional_packages="sudo neofetch vim networkmanager"
 default_key="davidovski https://xi.davidovski.xyz/keychain/xi.pub"
 
 XIPKG="/usr/bin/xi"
-XIFLAGS="-yl"
+XIFLAGS="-ylu"
 TMPDIR=/tmp
 SYSROOT=$1
 
