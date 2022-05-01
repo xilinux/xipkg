@@ -20,9 +20,10 @@ create_directories () {
 
     ln -s usr/lib ${SYSROOT}/lib
     ln -s usr/lib ${SYSROOT}/lib64
-    ln -s usr/lib ${SYSROOT}/usr/lib64
+    ln -s lib ${SYSROOT}/usr/lib64
 
     ln -s ../usr ${SYSROOT}/usr/local
+
     chmod 0755 ${SYSROOT}/dev
     chmod 1777 ${SYSROOT}/tmp
     chmod 0555 ${SYSROOT}/sys
