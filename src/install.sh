@@ -1,7 +1,7 @@
 #!/bin/sh
 
 extract () {
-    tar -h --keep-old-files -p -vvxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep ^- | tr -s " " | cut -d" " -f6 | cut -c2- 
+    tar -h --keep-old-files -p -vvxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep -v ^d | tr -s " " | cut -d" " -f6 | cut -c2- 
 }
 
 install_package () {
