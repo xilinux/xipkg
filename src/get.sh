@@ -120,16 +120,15 @@ download_packages () {
         outputs="$outputs ${out_dir}/${checksum}.${package}.xipkg" 
     done
     fetch_serial $total_download $outputs
-
-    validate_downloads $outputs
+    ${UNSAFE} || validate_downloads $outputs
+    echo $outputs >> "${CACHE_DIR}/toinstall"
 }
 
 # validate signatures of downloaded packages
 #
-# outputs: list of xipkg files to verify and install
 validate_downloads () {
     local i=0
-    ${UNSAFE} || for pkg_file in $@; do 
+    for pkg_file in $@; do 
 
         ${QUIET} || hbar -T "${LARGE_CIRCLE} validating downloads..." $i $#
 
@@ -140,13 +139,12 @@ validate_downloads () {
         else
             i=$((i+1))
         fi
-    done &&
+    done 
     ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} validated downloads" $i $#
-
-    install $@
 }
 
-# get and install requested packages
+# fetch requested packages
+# and ultimately write the list of package files to toinstall
 #
 get () {
     local requested=$@
@@ -154,14 +152,18 @@ get () {
     local total_download=0
     local out="${CACHE_DIR}/deps"
 
+    [ "$#" = "0" ] && return 0
+
+    $DO_SYNC && sync
+
     touch $out
     resolve_deps $@
 
     for package in $(cat $out); do
-        if ! package_exists $package; then
-            missing="$missing $package"
+        package_exists $package || {
+            missing="$missing $package" 
             continue
-        fi
+        }
 
         set -- $(get_package_download_info $package)
         checksum=$2

@@ -1,66 +1,70 @@
 #!/bin/sh
 
 usage () {
-cat << "EOF"
-Usage: xi [options] command...
+cat << EOF
+${LIGHT_WHITE}XiPkg Version $VERSION
 
-Available Options:
-    -r [path]
-        specify the installation root [default: /]
-    -c [path]
-        specify the config file to use [default: /etc/xipkg.conf]
-    -q
-        supress unecessary outputs
-    -v
-        be more verbose
-    -n
-        do not resolve package dependenceies
-    -l
-        do not sync databases (ignored when explicitly running sync)
-    -u
-        do not validate against keychain
-    -y
-        skip prompts
-    -h 
-        show help and exists
+${BLUE}Available Options:
+    ${BLUE}-r ${LIGHT_BLUE}[path]
+        ${LIGHT_CYAN}specify the installation root ${LIGHT_WHITE}[default: /]
+    ${BLUE}-c [path]
+        ${LIGHT_CYAN}specify the config file to use ${LIGHT_WHITE}[default: /etc/xipkg.conf]
+    ${BLUE}-q
+        ${LIGHT_CYAN}supress unecessary outputs
+    ${BLUE}-v
+        ${LIGHT_CYAN}be more verbose
+    ${BLUE}-n
+        ${LIGHT_CYAN}do not resolve package dependenceies
+    ${BLUE}-l
+        ${LIGHT_CYAN}do not sync databases (ignored when explicitly running sync)
+    ${BLUE}-u
+        ${LIGHT_CYAN}do not validate against keychain
+    ${BLUE}-y
+        ${LIGHT_CYAN}skip prompts
+    ${BLUE}-h 
+        ${LIGHT_CYAN}show help and exists
 
-Available Commands:
-    sync
-        sync the local package database with the remote repositories
+${BLUE}Available Commands:
+    ${LIGHT_GREEN}sync
+        ${LIGHT_CYAN}sync the local package database with the remote repositories
 
-    install [packages..]
-        install package(s) into the system
-    update
-        update all packages on the system
-    remove [packages...]
-        remove packages from the system
-    reinstall [packages..]
-        remove and reinstall package(s) into the system
-    fetch [package]
-        download a .xipkg file
-    keyimport [name] [url]
-        import a key from a url
-    clean
-        clean cached files and data
+    ${LIGHT_GREEN}install ${LIGHT_BLUE}[packages..]
+        ${LIGHT_CYAN}install package(s) into the system
+    ${LIGHT_GREEN}update
+        ${LIGHT_CYAN}update all packages on the system
+    ${LIGHT_GREEN}remove ${LIGHT_BLUE}[packages...]
+        ${LIGHT_CYAN}remove packages from the system
+    ${LIGHT_GREEN}reinstall ${LIGHT_BLUE}[packages..]
+        ${LIGHT_CYAN}remove and reinstall package(s) into the system
+    ${LIGHT_GREEN}fetch ${LIGHT_BLUE}[package]
+        ${LIGHT_CYAN}download a .xipkg file
+    ${LIGHT_GREEN}keyimport ${LIGHT_BLUE}[name] [url]
+        ${LIGHT_CYAN}import a key from a url
+    ${LIGHT_GREEN}clean
+        ${LIGHT_CYAN}clean cached files and data
 
-    search [query]
-        search the database for a package
-    files [package]
-        list files belonging to a package
-    verify [package]
-        verify that a package's files are intact
-    list
-        list available packages
-    list-installed
-        lists installed packages
-    file [path]
-        shows which package a file belongs to
+    ${LIGHT_GREEN}search ${LIGHT_BLUE}[query]
+        ${LIGHT_CYAN}search the database for a package
+    ${LIGHT_GREEN}files ${LIGHT_BLUE}[package]
+        ${LIGHT_CYAN}list files belonging to a package
+    ${LIGHT_GREEN}verify ${LIGHT_BLUE}[package]
+        ${LIGHT_CYAN}verify that a package's files are intact
+    ${LIGHT_GREEN}list
+        ${LIGHT_CYAN}list available packages
+    ${LIGHT_GREEN}list-installed
+        ${LIGHT_CYAN}lists installed packages
+    ${LIGHT_GREEN}file ${LIGHT_BLUE}[path]
+        ${LIGHT_CYAN}shows which package a file belongs to
+    ${LIGHT_GREEN}info ${LIGHT_BLUE}[package]
+        ${LIGHT_CYAN}show info about an installed package
 
-    bootstrap [additional packages...]
-        installs base packages and system files to an empty system
+    ${LIGHT_GREEN}bootstrap ${LIGHT_BLUE}[additional packages...]
+        ${LIGHT_CYAN}installs base packages and system files to an empty system
 
-    help
-        shows this message
+    ${LIGHT_GREEN}help
+        ${LIGHT_CYAN}shows this message${RESET}
+
+${RED}Usage: xi [options] command...
 EOF
 }
 checkroot () {
@@ -135,8 +139,6 @@ if [ "$#" = "0" ]; then
     . ${LIBDIR}/stats.sh
     show_xipkg_stats
 else 
-    # showing stats doesn't require root, so we can only check when we are here
-    # todo check for permissions when we need them and ask them per request
     case "$1" in
         "sync")
             checkroot
@@ -145,8 +147,19 @@ else
         "install" | "update")
             shift
             checkroot
-            $DO_SYNC && sync
-            install $@
+
+            [ "$#" = "0" ] && set -- $(list_installed)
+
+            toinstall=${CACHE_DIR}/toinstall
+
+            echo "" > $toinstall
+            tofetch=""
+            for f in $@; do
+                [ -f "$f" ] && echo $f >> $toinstall || tofetch="$tofetch$f "
+            done
+
+            get $tofetch
+            install $(cat $toinstall)
             ;;
         "search")
             shift

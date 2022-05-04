@@ -17,6 +17,7 @@ install_package () {
     set -- $(md5sum $pkg_file)
     local package_checksum=$1
     if [ ! -f $checksum ] || [ "$(cat $checksum)" != "$package_checksum" ]; then
+
         [ ! -d $installed_dir ] && mkdir -p "$installed_dir"
 
         [ -f "$files" ] && {
@@ -46,8 +47,7 @@ total_filecount() {
     local packages=$@
     local count=0
     for package in $packages; do
-        local name=$(basename $package .xipkg | cut -d. -f2)
-        local c=$(get_package_filecount $name)
+        c=$(tar -tvvf $package | grep -v ^d | wc -l)
         count=$((count+c))
     done
     echo $count
@@ -55,26 +55,28 @@ total_filecount() {
 
 run_postinstall () {
     postinstall="${SYSROOT}/var/lib/xipkg/postinstall"
-    if [ -d $postinstall ]; then
+    [ -d $postinstall ] &&
         for f in $(ls $postinstall); do
             file=$postinstall/$f
 
-            # run the postinstall file
-            #
             chmod 755 $file
-            if [ "${SYSROOT}" = "/" ]; then
-                sh "/var/lib/xipkg/postinstall/$f" 
-            else
-                xichroot ${SYSROOT} "/var/lib/xipkg/postinstall/$f" 
-            fi
-            if [ "$?" = "0" ]; then
+
+            [ "${SYSROOT}" = "/" ] && {
+                sh "/var/lib/xipkg/postinstall/$f" 2> ${LOG_FILE} > ${LOG_FILE}
+
+            } || {
+                xichroot ${SYSROOT} "/var/lib/xipkg/postinstall/$f" 2> ${LOG_FILE} > ${LOG_FILE}
+
+            } 
+        
+            [ "$?" = "0" ] && {
                 rm $file &&
-                printf "${GREEN}${CHECKMARK} run postinstall for $f!\n"
-            else
-                printf "${RED}${CROSSMARK} failed running postinstall for $f!\n"
-            fi
+                printf "${GREEN}${CHECKMARK} postinstall $f!\n"
+            } || {
+                printf "${RED}${CROSSMARK} failed postinstall $f!\n"
+            }
+
         done 
-    fi
 }
 
 
@@ -93,8 +95,6 @@ install () {
 
     if [ "${#missing}" != "0" ]; then
         ${VERBOSE} && printf "${BLACK}couldnt find: $missing\n${RESET}"
-        # warning: potential recursion loop here
-        get $missing
     else
         
         local total=$(total_filecount $packages 2>/dev/null || echo 1)
