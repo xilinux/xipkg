@@ -4,7 +4,7 @@ validate_checksum () {
     local file=$1
     local checksum=$2
     [ ! -f $file ] && return 1
-    [ "$(md5sum $file | awk '{ print $1; }')" = "$checksum" ]
+    [ "$(sha512sum $file | awk '{ print $1; }')" = "$checksum" ]
 }
 
 validate_sig () {

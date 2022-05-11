@@ -14,7 +14,7 @@ install_package () {
     local files="$installed_dir/files"
     local checksum="$installed_dir/checksum"
 
-    set -- $(md5sum $pkg_file)
+    set -- $(sha512sum $pkg_file)
     local package_checksum=$1
     if [ ! -f $checksum ] || [ "$(cat $checksum)" != "$package_checksum" ]; then
 
