@@ -62,9 +62,6 @@ bootstrap () {
     create_directories
     printf "${GREEN}${CHECKMARK}\n"
 
-    ${DO_SYNC} && sync
-
     [ "$#" != "0" ] && install $@
-
     import_keys 
 }
