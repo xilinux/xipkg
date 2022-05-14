@@ -48,7 +48,7 @@ keyimport () {
             # account for a glob input
             set +o noglob
             for key in ${KEYCHAIN_DIR}/$keyname.pub; do 
-                name=$(basename -s .pub $key)
+                name=$(basename $key .pub)
                 cp $key $keychain
                 printf "${GREEN}Imported ${LIGHT_GREEN}$name ${GREEN}to ${SYSROOT}\n" 
             done
