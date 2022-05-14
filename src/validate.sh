@@ -4,7 +4,10 @@ validate_checksum () {
     local file=$1
     local checksum=$2
     [ ! -f $file ] && return 1
-    [ "$(sha512sum $file | awk '{ print $1; }')" = "$checksum" ]
+    [ "$(sha512sum $file | awk '{ print $1; }')" = "$checksum" ] ||
+    [ "$(md5sum $file | awk '{ print $1; }')" = "$checksum" ]
+    # allow md5sum for backwards compatibility 
+    # TODO remove once all repos have sha512 sums
 }
 
 validate_sig () {
