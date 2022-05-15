@@ -67,15 +67,10 @@ ${BLUE}Available Commands:
 ${RED}Usage: xi [options] command...
 EOF
 }
-checkroot () {
-    [ "$(id -u)" = "0" ] || {
-        printf "${RED}Please run as root!\n"
-        exit 1
-    }
-}
 
 
 [ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
+[ -f "/usr/lib/xilib.sh" ] && . /usr/lib/xilib.sh
 
 [ -f ${LIBDIR}/VERSION ] && VERSION=$(cat ${LIBDIR}/VERSION) || VERSION=
 export VERSION

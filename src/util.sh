@@ -76,14 +76,10 @@ wait_for_extract () {
     wait
 }
 
-format_bytes () {
-    echo $@ | numfmt --to iec    
-
-}
-
 prompt_question () {
     $NOCONFIRM && return 0
     printf "$1 [Y/n] "
     read response
     [ "${var%${var#?}}"x != 'nx' ]
 }
+
