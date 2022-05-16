@@ -202,6 +202,17 @@ else
             shift
             file_info $@
             ;;
+        "info")
+            shift
+            for package in $@; do 
+                infofile=${INSTALLED_DIR}/$package/info
+                [ -f $infofile ] && {
+                    cat $infofile
+                } || {
+                    printf "Package info for $package could not be found!"
+                }
+            done
+            ;;
         "verify")
             shift
             [ -z "$*" ] && set -- $(ls ${INSTALLED_DIR})
