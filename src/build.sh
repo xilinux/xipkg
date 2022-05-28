@@ -12,9 +12,10 @@ get_buildfiles () {
         git rev-parse --git-dir && 
             git pull ||
             git clone $BUILDFILES_GIT .
-        } > $(${VERBOSE}&&echo "/dev/stdout" || echo "/dev/null") 2>&1  && {
+        } > $(${VERBOSE} && echo "/dev/stdout" || echo "/dev/null") 2>&1  && {
         ${QUIET} || printf "${GREEN}${CHECKMARK}\n"
     }
+    cd -
 }
 
 get_deps () {
@@ -24,12 +25,17 @@ get_deps () {
 }
 
 build_order () {
+    checked=""
     while [ "$#" != "0" ]; do 
         name=$1
         shift
         for dep in $(get_deps $name); do
-            set -- $@ $dep
-            echo $name $dep
+            [ -z "${checked##*$name*}" ] && {
+                checked="$checked $name"
+                set -- $@ $dep
+                echo $name $dep
+                ${VERBOSE} && echo "checking $name" 1>&2
+            }
         done
     done | tsort | reverse_lines 
 }
@@ -79,7 +85,9 @@ build () {
 
     set --
     for p in $pkgs; do 
-        needs_build $p && set -- $@ $p
+        needs_build $p || [ -z ${mentioned##*$p*} ] && {
+            set -- $@ $p
+        }
     done
 
     printf "${LIGHT_BLUE}The following packages will be built: \n"
