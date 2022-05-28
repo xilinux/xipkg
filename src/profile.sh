@@ -1,10 +1,11 @@
 #!/bin/sh
 
 . /usr/lib/colors.sh
+. /usr/lib/glyphs.sh
+
 export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"
 export HBAR_RED="-c ${BLACK}${BG_RED}"
 
-. /usr/lib/glyphs.sh
 
 export CONF_FILE="/etc/xipkg.conf"
 
@@ -23,4 +24,8 @@ export PACKAGE_CACHE="${CACHE_DIR}/packages"
 export SYNC_CACHE="${CACHE_DIR}/sync"
 
 export LOG_FILE="/var/log/xipkg.log"
+
+export BUILDFILES_DIR=$(parseconf -v dir.buildfiles)
+export BUILDFILES_GIT=$(parseconf -v buildfiles_git)
+
 [ ! -f ${LOG_FILE} ] && mkdir -p /var/log && touch ${LOG_FILE}

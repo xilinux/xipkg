@@ -14,7 +14,7 @@ list_deps() {
 # list all dependencies and sub dependencies of a package
 #
 resolve_deps () {
-    local out="${CACHE_DIR}/deps"
+    local out="$1"; shift
     local deps=""
     local i=0
 
@@ -157,7 +157,7 @@ get () {
     $DO_SYNC && sync
 
     touch $out
-    resolve_deps $@
+    resolve_deps $out $@
 
     for package in $(cat $out); do
         package_exists $package || {

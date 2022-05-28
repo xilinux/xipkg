@@ -125,6 +125,7 @@ done
 . ${LIBDIR}/query.sh
 . ${LIBDIR}/sync.sh
 . ${LIBDIR}/install.sh
+. ${LIBDIR}/build.sh
 . ${LIBDIR}/get.sh
 . ${LIBDIR}/remove.sh
 
@@ -155,6 +156,14 @@ else
 
             get $tofetch
             install $(cat $toinstall)
+            ;;
+        "build")
+            shift
+            checkroot
+
+            [ "$#" = "0" ] && set -- $(list_installed)
+
+            build $@
             ;;
         "search")
             shift

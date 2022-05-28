@@ -8,7 +8,7 @@ install: install-config
 	mkdir -p ${DESTDIR}${PREFIX}/lib/xipkg
 	install -m755 ${SOURCE}/*.sh ${DESTDIR}${PREFIX}/lib/xipkg/
 	install -m755 ${SOURCE}/xi.sh ${DESTDIR}${PREFIX}/bin/xipkg
-	ln -s xipkg ${DESTDIR}${PREFIX}/bin/xi
+	ln -sf xipkg ${DESTDIR}${PREFIX}/bin/xi
 	git describe --always > ${DESTDIR}${PREFIX}/lib/xipkg/VERSION
 
 install-config:

@@ -73,7 +73,7 @@ run_postinstall () {
                 rm $file &&
                 printf "${GREEN}${CHECKMARK} postinstall $f!\n"
             } || {
-                printf "${RED}${CROSSMARK} failed postinstall $f!\n"
+                ${QUIET} || printf "${RED}${CROSSMARK} failed postinstall $f!\n"
             }
 
         done 
