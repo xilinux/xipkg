@@ -52,10 +52,7 @@ get_installed_revision () {
 # test if the given package by name needs to be rebuilt
 #
 needs_build () {
-    name=$1
-    builddir=$(get_package_build $name)
-
-    [ "$(get_revision $builddir)" = "$(get_installed_revision $name)" ] 
+    [ "$(get_revision $(get_package_build $1))" != "$(get_installed_revision $1)" ] 
 }
 
 
@@ -77,9 +74,11 @@ build_package () {
 
 build () {
     $DO_SYNC && get_buildfiles
-    set -- $(build_order $@)
+    mentioned=$@
+    pkgs=$(build_order $@)
 
-    for p in $@; do 
+    set --
+    for p in $pkgs; do 
         needs_build $p && set -- $@ $p
     done
 
