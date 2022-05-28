@@ -1,6 +1,7 @@
 #!/bin/sh
 
 extract () {
+    # keep old files here, so we dont overwrite any configs
     tar -h --keep-old-files -p -vvxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep -v ^d | tr -s " " | cut -d" " -f6 | cut -c2- 
 }
 
@@ -28,7 +29,10 @@ install_package () {
         }
 
         ${VERBOSE} && printf "${BLACK}Extracting $name...\n"
-        extract $pkg_file > $files
+
+        # dont overwrite anything in /etc; this is where configs are saved
+        # TODO define which files should be preserved
+        extract $pkg_file | grep -v '^/etc' > $files
 
         [ -f $info_file ] && cp $info_file $info
         echo $package_checksum > $checksum
