@@ -42,6 +42,8 @@ ${BLUE}Available Commands:
         ${LIGHT_CYAN}import a key from a url
     ${LIGHT_GREEN}clean
         ${LIGHT_CYAN}clean cached files and data
+    ${LIGHT_GREEN}build
+        ${LIGHT_CYAN}build a package from source
 
     ${LIGHT_GREEN}search ${LIGHT_BLUE}[query]
         ${LIGHT_CYAN}search the database for a package
