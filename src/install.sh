@@ -23,7 +23,8 @@ install_package () {
 
         [ -f "$files" ] && {
             for file in $(cat $files); do
-                rm -f ${SYSROOT}$file
+                [ -z "${file%%/etc*}" ] || 
+                    rm -f ${SYSROOT}$file
             done
             rm $files
         }
@@ -32,7 +33,7 @@ install_package () {
 
         # dont overwrite anything in /etc; this is where configs are saved
         # TODO define which files should be preserved
-        extract $pkg_file | grep -v '^/etc' > $files
+        extract $pkg_file > $files
 
         [ -f $info_file ] && cp $info_file $info
         echo $package_checksum > $checksum
