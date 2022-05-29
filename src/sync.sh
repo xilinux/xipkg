@@ -4,20 +4,22 @@
 # save each listed package in a relevant directory, based on checksum
 #
 parse_line() {
-    local repo=$1
-    local repo_url=$2
-    local package=$3
-    local checksum=$4
-    local size=$5
-    local files=$6
+    [ "$#" = "6" ] && {
+        local repo=$1
+        local repo_url=$2
+        local package=$3
+        local checksum=$4
+        local size=$5
+        local files=$6
 
-    local package_name=$(basename $package ".xipkg")
+        local package_name=$(basename $package ".xipkg")
 
-    local package_dir="$PACKAGES_DIR/$repo/$package_name.versions"
-    local checksum_file=$package_dir/$checksum
+        local package_dir="$PACKAGES_DIR/$repo/$package_name.versions"
+        local checksum_file=$package_dir/$checksum
 
-    [ -d $package_dir ] || mkdir -p $package_dir
-    printf "$repo_url/$package $checksum $size $files\n" >> $checksum_file
+        [ -d $package_dir ] || mkdir -p $package_dir
+        printf "$repo_url/$package $checksum $size $files\n" >> $checksum_file
+    }
 }
 
 list_source () {
@@ -55,7 +57,9 @@ dep_graph () {
         while IFS= read -r line; do
             local package=$(echo $line | cut -d: -f1)
             local new=$(echo $line | cut -d: -f2-)
-            echo $new >> $DEP_DIR/$package
+
+            [ -z "${package}" ] &&
+                echo $new >> $DEP_DIR/$package
         done < "$tmp_file"
     fi
 }
