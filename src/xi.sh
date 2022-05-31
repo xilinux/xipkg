@@ -53,8 +53,10 @@ ${BLUE}Available Commands:
         ${LIGHT_CYAN}verify that a package's files are intact
     ${LIGHT_GREEN}list
         ${LIGHT_CYAN}list available packages
-    ${LIGHT_GREEN}list-installed
+    ${LIGHT_GREEN}installed
         ${LIGHT_CYAN}lists installed packages
+    ${LIGHT_GREEN}list-installed
+        ${LIGHT_CYAN}list packages showing the installed ones
     ${LIGHT_GREEN}file ${LIGHT_BLUE}[path]
         ${LIGHT_CYAN}shows which package a file belongs to
     ${LIGHT_GREEN}info ${LIGHT_BLUE}[package]
@@ -209,6 +211,9 @@ else
         "list-installed")
             list_installed
             ;;
+        "installed")
+            installed
+            ;;
         "file")
             shift
             file_info $@
@@ -242,6 +247,7 @@ else
             usage
             ;;
         *)
+            checkroot
             $DO_SYNC && sync
             install $@
             ;;

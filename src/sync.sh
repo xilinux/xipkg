@@ -4,40 +4,36 @@
 # save each listed package in a relevant directory, based on checksum
 #
 parse_line() {
-    [ "$#" = "6" ] && {
-        local repo=$1
-        local repo_url=$2
-        local package=$3
-        local checksum=$4
-        local size=$5
-        local files=$6
+    [ "$#" = "5" ] && {
+        local url=$1
+        local package=$2
+        local checksum=$3
+        local size=$4
+        local files=$5
 
         local package_name=$(basename $package ".xipkg")
 
-        local package_dir="$PACKAGES_DIR/$repo/$package_name.versions"
+        local package_dir="$PACKAGES_DIR/$package_name.versions"
         local checksum_file=$package_dir/$checksum
 
         [ -d $package_dir ] || mkdir -p $package_dir
-        printf "$repo_url/$package $checksum $size $files\n" >> $checksum_file
+        printf "$url/$package $checksum $size $files\n" >> $checksum_file
     }
 }
 
 list_source () {
-    local repo=$1
-    local src=$2
-
+    local src=$1
     local url=$(echo $src | cut -d":" -f2-)
     local name=$(echo $src | cut -d":" -f1)
-    local repo_url="${url}${repo}"
-    local full_url="${repo_url}/packages.list"
-    local tmp_file="${SYNC_CACHE}/$name.$repo"
+    local full_url="${url}/packages.list"
+    local tmp_file="${SYNC_CACHE}/$name"
 
-    ${VERBOSE} && printf "${LIGHT_BLACK}Indexing $repo from $full_url\n"
+    ${VERBOSE} && printf "${LIGHT_BLACK}Indexing packages from $full_url\n"
     local status=$(download_file $tmp_file $full_url)
     
-    if [ "$status" = "200" ] ||  [ "$status" = "000" ] && [ -f $tmp_file ]; then
+    if [ "$status" = "200" ] || [ "$status" = "000" ] && [ -f $tmp_file ]; then
         while IFS= read -r line; do
-            parse_line $repo $repo_url $line
+            parse_line $url $line
         done < "$tmp_file"
     else
         return 1
@@ -55,11 +51,11 @@ dep_graph () {
     local status=$(download_file $tmp_file $full_url)
     if [ "$status" = "200" ] ||  [ "$status" = "000" ]; then
         while IFS= read -r line; do
-            local package=$(echo $line | cut -d: -f1)
-            local new=$(echo $line | cut -d: -f2-)
-
-            [ -z "${package}" ] &&
+            [ "${#line}" != "0" ] && {
+                local package=$(echo $line | cut -d: -f1)
+                local new=$(echo $line | cut -d: -f2-)
                 echo $new >> $DEP_DIR/$package
+            }
         done < "$tmp_file"
     fi
 }
@@ -81,7 +77,7 @@ popularity_contest () {
         return 1
     fi
 
-    local list=$(ls -1 -d $PACKAGES_DIR/*/*)
+    local list=$(ls -1 -d $PACKAGES_DIR/*)
     local total=$(echo $list | wc -l)
 
     local completed=0
@@ -94,32 +90,29 @@ popularity_contest () {
 }
 
 index_deps () {
-    local l=$1
     set -- ${SOURCES}
     local total=$#
     local completed=0
 
     for src in ${SOURCES}; do
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
         dep_graph $src
         completed=$((completed+1))
-        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
     done
-    ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} indexed dependencies" $completed $total
+    ${QUIET} || hbar ${HBAR_COMPLETE} -T "${CHECKMARK} indexed dependencies" $completed $total
 }
 
 index_repo () {
-    local repo=$1 l=$2
     set -- ${SOURCES}
     local total=$#
     local completed=0
 
-
     for src in ${SOURCES}; do
-        list_source $repo $src 
+        ${QUIET} || hbar -T "${LARGE_CIRCLE} syncing sources..." $completed $total
+        list_source $src 
         completed=$((completed+1))
-        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} syncing $repo..." $completed $total
     done
-    ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} synced $repo" $completed $total
+    ${QUIET} || hbar ${HBAR_COMPLETE} -T "${CHECKMARK} synced sources" $completed $total
 }
 
 sync () {
@@ -131,19 +124,14 @@ sync () {
     mkdir $DEP_DIR
 
     ${VERBOSE} && printf "${LIGHT_BLACK}Syncing\n"
-    # create padding spaces for each hbar 
-    ${QUIET} || for repo in ${REPOS}; do 
-        hbar
-    done
 
     # download package lists and dep graphs at the same time
-    index_deps 0 &
-    local i=1
-    for repo in ${REPOS}; do 
-        mkdir -p ${PACKAGES_DIR}/$repo
-        index_repo $repo $i &
-        i=$((i+1))
-    done
+    mkdir -p ${PACKAGES_DIR}
+
+    # index packages and dependencies
+    index_repo
+    ${QUIET} || hbar
+    index_deps
 
     # wait for all jobs to complete
     wait

@@ -5,8 +5,16 @@ list () {
     find ${PACKAGES_DIR} -type f | sed "s,${PACKAGES_DIR}/,," 
 }
 
-list_installed () {
+installed () {
     ls -1 ${INSTALLED_DIR}
+}
+
+list_installed () {
+    list | while read -r line; do 
+        [ -d ${INSTALLED_DIR}/$line ] \
+            && echo $line "[installed]" \
+            || echo $line
+    done
 }
 
 search () {
