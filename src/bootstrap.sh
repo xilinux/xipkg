@@ -1,7 +1,9 @@
 #!/bin/sh
 
-DEFAULT_KEYS="davidovski https://xi.davidovski.xyz/keychain/xi.pub"
+DEFAULT_KEYS=$(parseconf -v bootstrap_keys)
 
+# create necessary directories for a complete system
+#
 create_directories () {
     mkdir -p ${SYSROOT}
     mkdir -p ${SYSROOT}/dev
@@ -42,7 +44,9 @@ import_keys () {
     if [ -d ${KEYCHAIN_DIR} ] && [ "$(ls ${KEYCHAIN_DIR} | wc -w)" != "0" ]; then
         keyimport *
     else
-        keyimport $DEFAULT_KEYS
+       echo "$DEFAULT_KEYS" | while read -r keypair; do 
+           keyimport ${keypair%%:*} ${keypair#*:}
+        done
     fi
 }
 
