@@ -5,7 +5,7 @@
 . /usr/lib/colors.sh
 
 logfile="installer.log"
-default_packages="base linux xipkg dracut grub mksh sudo neofetch vim"
+default_packages="base linux xipkg dracut grub mksh sudo neofetch vim tzdata"
 additional_services="networkmanager xorg iwd"
 
 list_disks () {

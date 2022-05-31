@@ -19,7 +19,7 @@ get_buildfiles () {
 }
 
 get_deps () {
-    for f in $BUILDFILES_DIR/repo/*/$1/*.xibuild; do 
+    for f in $BUILDFILES_DIR/repo/$1/*.xibuild; do 
         sed -rn "s/^.*DEPS=\"(.*)\"/\1/p" $f
     done
 }

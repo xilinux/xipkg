@@ -117,6 +117,9 @@ download_packages () {
     mkdir -p "$out_dir"
 
     for package in $@; do 
+        set -- $(get_package_download_info $package)
+        checksum=$2
+        size=$3
         outputs="$outputs ${out_dir}/${checksum}.${package}.xipkg" 
     done
     fetch_serial $total_download $outputs
@@ -255,3 +258,4 @@ fetch_parallel () {
     done
     wait_for_download total_download $@ &
 }
+
