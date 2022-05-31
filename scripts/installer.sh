@@ -115,6 +115,7 @@ install_base () {
 }
 
 copy_resolvconf () {
+    [ ! -d $sysroot/etc ] && mkdir $sysroot/etc
     cp /etc/resolv.conf $sysroot/etc/resolv.conf
 }
 

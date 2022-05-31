@@ -6,10 +6,11 @@
 export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"
 export HBAR_RED="-c ${BLACK}${BG_RED}"
 
-
 export CONF_FILE="/etc/xipkg.conf"
 
 export CURL_OPTS="-sSL"
+
+export DEFAULT_OPTION=$(parseconf -v default_cmd) 
 
 export DEP_DIR=$(parseconf -v dir.deps)
 export REPOS="$(parseconf -v repos)"

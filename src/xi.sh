@@ -247,9 +247,8 @@ else
             usage
             ;;
         *)
-            checkroot
-            $DO_SYNC && sync
-            install $@
+
+            sudo $0 ${DEFAULT_OPTION:-install} $@
             ;;
     esac
 fi
