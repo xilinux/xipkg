@@ -57,7 +57,7 @@ resolve_deps () {
 #  url checksum size files 
 #
 get_package_download_info() {
-    sed 1q ${PACKAGES_DIR}/*/$1
+    sed 1q ${PACKAGES_DIR}/$1
 }
 
 # return if a package is present on the system or not
@@ -77,7 +77,7 @@ get_installed_version () {
 
 # bad implementation
 package_exists () {
-    [ "$(find ${PACKAGES_DIR} -mindepth 2 -name "$1" | wc -l)" != "0" ]
+    [ "$(find ${PACKAGES_DIR} -mindepth 1 -name "$1" | wc -l)" != "0" ]
 }
 
 download_package () {
