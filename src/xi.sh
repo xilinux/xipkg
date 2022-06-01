@@ -252,4 +252,5 @@ else
             ;;
     esac
 fi
-printf "${RESET}"
+
+${QUIET} || printf "${RESET}"
