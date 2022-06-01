@@ -37,8 +37,9 @@ file_info () {
         [ ! -f ${SYSROOT}$file ] && file=$(realpath $file)
         for pkg in $(installed); do
             for list in ${INSTALLED_DIR}/$pkg/files; do
-                grep -q ^${file}$ $list &&
-                    printf "${LIGHT_BLUE}%s${BLUE} belongs to ${LIGHT_BLUE}%s${RESET}\n" $file $pkg
+                [ -f $list ] && grep -q ${file}$ $list && {
+                    ${QUIET} && echo $pkg || printf "${LIGHT_BLUE}%s${BLUE} belongs to ${LIGHT_BLUE}%s${RESET}\n" $file $pkg
+                }
             done
         done
     done
