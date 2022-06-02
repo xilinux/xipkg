@@ -34,12 +34,15 @@ files () {
 
 file_info () {
     for file in $@; do
-        [ ! -f ${SYSROOT}$file ] && file=$(realpath $file)
+        [ ! -f ${SYSROOT}$file ] && file=$(realpath $file 2>/dev/null)
         for pkg in $(installed); do
             for list in ${INSTALLED_DIR}/$pkg/files; do
-                [ -f $list ] && grep -q ${file}$ $list && {
-                    ${QUIET} && echo $pkg || printf "${LIGHT_BLUE}%s${BLUE} belongs to ${LIGHT_BLUE}%s${RESET}\n" $file $pkg
-                }
+                [ -f $list ] &&  {
+
+                    grep -q "^/usr${file}$" $list || grep -q "^${file}$" $list && {
+                        ${QUIET} && echo $pkg || printf "${LIGHT_BLUE}%s${BLUE} belongs to ${LIGHT_BLUE}%s${RESET}\n" $file $pkg
+                    }
+            }
             done
         done
     done
