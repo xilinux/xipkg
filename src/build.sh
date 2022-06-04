@@ -72,7 +72,9 @@ build_package () {
     local builddir=$(get_package_build $1)
 
     [ -d "$builddir" ] && {
-       xibuild -ci -r ${SYSROOT} $builddir 
+        out=/var/lib/xibuild/$name
+        mkdir -p $out
+       xibuild -ci -r ${SYSROOT} -o $out -C $builddir 
     } || { 
         ${QUIET} || printf "${RED}Package $1 does not exist!\n"
     }
