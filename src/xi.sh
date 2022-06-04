@@ -165,7 +165,7 @@ else
             shift
             checkroot
 
-            [ "$#" = "0" ] && set -- $(list_installed)
+            [ "$#" = "0" ] && set -- $(installed)
 
             build $@
             ;;

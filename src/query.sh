@@ -19,9 +19,9 @@ list_installed () {
 
 search () {
     if [ $# = 0 ]; then
-        list
+        list_installed
     else
-        list | grep $(echo $@ | sed "s/ /\\|/g")
+        list_installed | grep $(echo $@ | sed "s/ /\\|/g")
     fi
 }
 
