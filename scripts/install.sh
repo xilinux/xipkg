@@ -1,6 +1,6 @@
 #!/bin/sh
 
-default_packages="base linux xipkg dracut grub bash"
+default_packages="base linux-libre xipkg dracut grub bash"
 additional_packages="sudo neofetch vim networkmanager"
 default_key="davidovski https://xi.davidovski.xyz/keychain/xi.pub"
 
@@ -30,7 +30,8 @@ echo "Please make sure that you have correctly formatted any partitions and moun
 }
 
 $XIPKG $XIFLAGS sync
-$XIPKG $XIFLAGS -r $SYSROOT bootstrap $default_packages
+$XIPKG $XIFLAGS -r $SYSROOT bootstrap 
+$XIPKG $XIFLAGS -r $SYSROOT install $default_packages
 $XIPKG $XIFLAGS -r $SYSROOT keyimport $default_key
 
 configuring_users () {

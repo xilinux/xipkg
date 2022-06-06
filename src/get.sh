@@ -50,7 +50,7 @@ resolve_deps () {
         ${QUIET} || hbar -T "${CHECKMARK} resolving dependencies" $i $((i + $#))
     done
 
-    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} resolved dependencies" $i $((i + $#))
+    ${QUIET} || hbar -t ${HBAR_COMPLETE} -T "${CHECKMARK} resolved dependencies" $i $((i + $#)) 
     echo ${deps} > $out
 }
 
@@ -78,9 +78,8 @@ get_installed_version () {
         cat $file
 }
 
-# bad implementation
 package_exists () {
-    [ "$(find ${PACKAGES_DIR} -mindepth 1 -name "$1" | wc -l)" != "0" ]
+    [ -f "${PACKAGES_DIR}/$1" ]
 }
 
 download_package () {
@@ -161,7 +160,7 @@ get () {
     [ "$#" = "0" ] && return 0
 
     $DO_SYNC && sync
-
+ 
     touch $out
     resolve_deps $out $@
 

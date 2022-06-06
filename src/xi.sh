@@ -187,7 +187,8 @@ else
         "reinstall")
             shift
             checkroot
-            reinstall $@
+            $0 remove $@
+            $0 install $@
             ;;
         "files")
             shift

@@ -20,13 +20,13 @@ remove () {
             echo $package_dir >> $to_remove 
             real="$real $package"
         else
-            >&2 printf "${RED}Package ${LIGHT_RED}$package${RED} is not installed"
+            printf "${RED}Package ${LIGHT_RED}$package${RED} is not installed\n" > /dev/stderr
         fi
     done
 
     local total=$(cat $to_remove | wc -l)
 
-    ${QUIET} || printf "${LIGHT_RED}The following packages will be removed from the system:\n\t${RED}%s\n" $real
+    ${QUIET} || printf "${LIGHT_RED}The following packages will be removed from the system:\n\t${RED}$real\n" 
     ${QUIET} || printf "${LIGHT_RED}Files to remove: ${RED}%s\n" $total
     ${VERBOSE} && cat $to_remove
 
