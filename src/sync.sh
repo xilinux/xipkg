@@ -90,29 +90,31 @@ popularity_contest () {
 }
 
 index_deps () {
+    local l=$1
     set -- ${SOURCES}
     local total=$#
     local completed=0
 
     for src in ${SOURCES}; do
-        ${QUIET} || hbar -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
+        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} indexing dependencies..." $completed $total
         dep_graph $src
         completed=$((completed+1))
     done
-    ${QUIET} || hbar ${HBAR_COMPLETE} -T "${CHECKMARK} indexed dependencies" $completed $total
+    ${QUIET} || hbar -l $l ${HBAR_COMPLETE} -T "${CHECKMARK} indexed dependencies" $completed $total
 }
 
 index_repo () {
+    local l=$1
     set -- ${SOURCES}
     local total=$#
     local completed=0
 
     for src in ${SOURCES}; do
-        ${QUIET} || hbar -T "${LARGE_CIRCLE} syncing sources..." $completed $total
+        ${QUIET} || hbar -l $l -T "${LARGE_CIRCLE} syncing sources..." $completed $total
         list_source $src 
         completed=$((completed+1))
     done
-    ${QUIET} || hbar ${HBAR_COMPLETE} -T "${CHECKMARK} synced sources" $completed $total
+    ${QUIET} || hbar -l $1 ${HBAR_COMPLETE} -T "${CHECKMARK} synced sources" $completed $total
 }
 
 sync () {
@@ -129,9 +131,10 @@ sync () {
     mkdir -p ${PACKAGES_DIR}
 
     # index packages and dependencies
-    index_repo
     ${QUIET} || hbar
-    index_deps
+    ${QUIET} || hbar
+    index_repo 1 &
+    index_deps 0 &
 
     # wait for all jobs to complete
     wait

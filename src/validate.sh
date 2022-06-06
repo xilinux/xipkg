@@ -70,7 +70,7 @@ validate_files () {
             ${VERBOSE} && printf "${GREEN}%s is present\n" $file
         else
             ret=$((ret+1))
-            ${QUIET} || printf "${RED}%s is missing\n" $file
+            ${QUIET} && printf "%s\n" $file || printf "${RED}%s is missing\n" $file
         fi
     done
     ${QUIET} || printf "${RESET}"

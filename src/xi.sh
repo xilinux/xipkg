@@ -148,7 +148,7 @@ else
             shift
             checkroot
 
-            [ "$#" = "0" ] && set -- $(list_installed)
+            [ "$#" = "0" ] && set -- $(installed)
 
             toinstall=${CACHE_DIR}/toinstall
 
@@ -233,7 +233,10 @@ else
             shift
             [ -z "$*" ] && set -- $(ls ${INSTALLED_DIR})
             while [ ! -z "$*" ]; do
-                validate_files $1 || printf "${LIGHT_RED}Failed to verify $1\n"
+                validate_files $1 || {
+                   ${QUIET} && printf "%s\n" $1 || printf "${LIGHT_RED}Failed to verify $1\n"
+                    
+                }
                 shift
             done
             ;;

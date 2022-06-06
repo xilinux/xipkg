@@ -8,7 +8,7 @@ list_deps() {
     [ -f $tree_file ] &&
         for dep in $(cat "$tree_file"); do
             echo $dep
-        done | sort -u
+        done 
 }
 
 # list all dependencies and sub dependencies of a package
@@ -30,18 +30,21 @@ resolve_deps () {
         local package=$1
 
         #only add if not already added
-        if ! echo ${deps} | grep -q "\b$package\b"; then
+        case "  $deps " in 
+                *" $package "*);;
+                *)
             deps="$deps $package"
             i=$((i+1))
-        fi
+            ;;
+        esac
 
         for dep in $(list_deps $package); do
             # if not already checked
-            if echo $@ | grep -qv "\b$dep\b"; then
-                set -- $@ $dep
-            fi
+            case " $@ $deps " in 
+                *" $dep "*) ;;
+                *) set -- $@ $dep;;
+            esac
         done
-
         shift
 
         ${QUIET} || hbar -T "${CHECKMARK} resolving dependencies" $i $((i + $#))
