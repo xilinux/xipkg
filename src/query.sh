@@ -79,7 +79,7 @@ extract_info () {
 print_info ()  {
     file=$1
     line="${LIGHT_CYAN}%-15s ${LIGHT_BLUE}%s\n" 
-    for field in Name Description Version Origin; do 
+    for field in Name Description Version; do 
         printf "$line" "$field" "$(extract_info $file $field)"
     done
 
