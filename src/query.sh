@@ -1,14 +1,20 @@
 #!/bin/sh
 
 
+# list all available packages
+#
 list () {
     find ${PACKAGES_DIR} -type f | sed "s,${PACKAGES_DIR}/,," 
 }
 
+# list installed packages
+#
 installed () {
     ls -1 ${INSTALLED_DIR}
 }
 
+# list all packages and lable installed ones
+#
 list_installed () {
     list | while read -r line; do 
         [ -d ${INSTALLED_DIR}/$line ] \
@@ -17,6 +23,8 @@ list_installed () {
     done
 }
 
+# search for a package based on a query
+#
 search () {
     if [ $# = 0 ]; then
         list_installed
@@ -25,6 +33,8 @@ search () {
     fi
 }
 
+# list the files that belong to a package
+#
 files () {
     for package in $@; do
         local file="${INSTALLED_DIR}/$package/files"
@@ -32,6 +42,8 @@ files () {
     done
 }
 
+# figure out which package a file belongs to
+#
 file_info () {
     for file in $@; do
         [ ! -f ${SYSROOT}$file ] && file=$(realpath $file 2>/dev/null)
@@ -54,3 +66,41 @@ file_info () {
     done
 }
 
+# extract a variable from a package info 
+#
+#   extract_info [file] [FIELD]
+#
+extract_info () {
+    grep -i "^$2=" $1 | cut -d'=' -f2-
+}
+
+# pretty print a xipkg info file
+#
+print_info ()  {
+    file=$1
+    line="${LIGHT_CYAN}%-15s ${LIGHT_BLUE}%s\n" 
+    for field in Name Description Version Origin; do 
+        printf "$line" "$field" "$(extract_info $file $field)"
+    done
+
+    printf "$line" "Dependencies" "$(extract_info $file "DEPS")"
+    printf "$line" "Build Date" "$(extract_info $file "DATE")"
+
+    is_installed $(extract_info $file "NAME") && {
+        date=$(date -d @$(stat -t $file | cut -d' ' -f13))
+        printf "$line" "Install Date" "$date"
+    } || true
+}
+ 
+# print information about one or more packages
+#
+info () {
+    for package in $@; do 
+        infofile=${INSTALLED_DIR}/$package/info
+        [ -f $infofile ] && {
+            print_info $infofile
+        } || {
+            printf "Package info for $package could not be found!"
+        }
+    done
+}

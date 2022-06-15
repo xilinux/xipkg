@@ -83,3 +83,23 @@ prompt_question () {
     [ "${var%${var#?}}"x != 'nx' ]
 }
 
+# return if a package is present on the system or not
+#
+is_installed() {
+    [ -f "${INSTALLED_DIR}/$1/checksum" ]
+}
+
+# get the installed checksum of a package ($1)
+#
+get_installed_version () {
+    local name=$1
+    local file="${INSTALLED_DIR}/$name/checksum"
+    [ -f $file ] &&
+        cat $file
+}
+
+# 
+#
+package_exists () {
+    [ -f "${PACKAGES_DIR}/$1" ]
+}

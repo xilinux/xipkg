@@ -63,25 +63,6 @@ get_package_download_info() {
     sed 1q ${PACKAGES_DIR}/$1
 }
 
-# return if a package is present on the system or not
-#
-is_installed() {
-    [ -f "${INSTALLED_DIR}/$1/checksum" ]
-}
-
-# get the installed checksum of a package ($1)
-#
-get_installed_version () {
-    local name=$1
-    local file="${INSTALLED_DIR}/$name/checksum"
-    [ -f $file ] &&
-        cat $file
-}
-
-package_exists () {
-    [ -f "${PACKAGES_DIR}/$1" ]
-}
-
 download_package () {
     local package=$1
     local output=$2
@@ -119,6 +100,7 @@ download_packages () {
     mkdir -p "$out_dir"
 
     for package in $@; do 
+        # TODO if pacakge is local, just symlink instead
         set -- $(get_package_download_info $package)
         checksum=$2
         size=$3

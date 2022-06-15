@@ -133,6 +133,21 @@ done
 . ${LIBDIR}/get.sh
 . ${LIBDIR}/remove.sh
 
+do_install () {
+    [ "$#" = "0" ] && set -- $(installed)
+
+    toinstall=${CACHE_DIR}/toinstall
+
+    echo "" > $toinstall
+    tofetch=""
+    for f in $@; do
+        [ -f "$f" ] && echo $f >> $toinstall || tofetch="$tofetch$f "
+    done
+
+    get $tofetch
+    install $(cat $toinstall)
+}
+
 shift $((OPTIND-1))
 
 if [ "$#" = "0" ]; then
@@ -147,19 +162,7 @@ else
         "install" | "update")
             shift
             checkroot
-
-            [ "$#" = "0" ] && set -- $(installed)
-
-            toinstall=${CACHE_DIR}/toinstall
-
-            echo "" > $toinstall
-            tofetch=""
-            for f in $@; do
-                [ -f "$f" ] && echo $f >> $toinstall || tofetch="$tofetch$f "
-            done
-
-            get $tofetch
-            install $(cat $toinstall)
+            do_install $@
             ;;
         "build")
             shift
@@ -187,8 +190,8 @@ else
         "reinstall")
             shift
             checkroot
-            $0 remove $@
-            $0 install $@
+            remove $@
+            do_install $@
             ;;
         "files")
             shift
@@ -221,14 +224,7 @@ else
             ;;
         "info")
             shift
-            for package in $@; do 
-                infofile=${INSTALLED_DIR}/$package/info
-                [ -f $infofile ] && {
-                    cat $infofile
-                } || {
-                    printf "Package info for $package could not be found!"
-                }
-            done
+            info $@
             ;;
         "verify")
             shift
