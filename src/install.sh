@@ -125,3 +125,18 @@ reinstall () {
     install $@
 }
 
+do_install () {
+    [ "$#" = "0" ] && set -- $(installed)
+
+    toinstall=${CACHE_DIR}/toinstall
+
+    echo "" > $toinstall
+    tofetch=""
+    for f in $@; do
+        [ -f "$f" ] && echo $f >> $toinstall || tofetch="$tofetch$f "
+    done
+
+    get $tofetch
+    install $(cat $toinstall)
+}
+

@@ -49,8 +49,10 @@ ${BLUE}Available Commands:
         ${LIGHT_CYAN}search the database for a package
     ${LIGHT_GREEN}files ${LIGHT_BLUE}[package]
         ${LIGHT_CYAN}list files belonging to a package
-    ${LIGHT_GREEN}verify ${LIGHT_BLUE}[package]
+    ${LIGHT_GREEN}verify ${LIGHT_BLUE}[package...]
         ${LIGHT_CYAN}verify that a package's files are intact
+    ${LIGHT_GREEN}size ${LIGHT_BLUE}[package...]
+        ${LIGHT_CYAN}get the Total installed size of a package
     ${LIGHT_GREEN}list
         ${LIGHT_CYAN}list available packages
     ${LIGHT_GREEN}installed
@@ -133,21 +135,6 @@ done
 . ${LIBDIR}/get.sh
 . ${LIBDIR}/remove.sh
 
-do_install () {
-    [ "$#" = "0" ] && set -- $(installed)
-
-    toinstall=${CACHE_DIR}/toinstall
-
-    echo "" > $toinstall
-    tofetch=""
-    for f in $@; do
-        [ -f "$f" ] && echo $f >> $toinstall || tofetch="$tofetch$f "
-    done
-
-    get $tofetch
-    install $(cat $toinstall)
-}
-
 shift $((OPTIND-1))
 
 if [ "$#" = "0" ]; then
@@ -169,7 +156,6 @@ else
             checkroot
 
             [ "$#" = "0" ] && set -- $(installed)
-
             build $@
             ;;
         "search")
@@ -217,6 +203,23 @@ else
             ;;
         "installed")
             installed
+            ;;
+        "size")
+            shift
+            [ "$#" = "0" ] && set -- $(installed)
+
+            total=$(for p in $@; do
+                echo "$(size_of $p) $p"
+            done | sort -n | while read f; do 
+                set -- $f
+                $QUIET  || printf "${WHITE}Size of ${BLUE}%s${WHITE}: ${LIGHT_WHITE}%s\n" "$2" "$(format_bytes $1)" >/dev/stderr
+                echo $1
+            done | paste -s -d+ - | bc)
+
+            $QUIET && echo $total || {
+                [ "$total" != "$size" ] &&
+                    printf "${WHITE}Total size: ${LIGHT_WHITE}%s\n" "$(format_bytes $total)"
+            }
             ;;
         "file")
             shift

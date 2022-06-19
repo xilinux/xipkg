@@ -78,6 +78,7 @@ extract_info () {
 #
 print_info ()  {
     file=$1
+    name=$(extract_info $file "NAME")
     line="${LIGHT_CYAN}%-15s ${LIGHT_BLUE}%s\n" 
     for field in Name Description Version; do 
         printf "$line" "$field" "$(extract_info $file $field)"
@@ -86,9 +87,10 @@ print_info ()  {
     printf "$line" "Dependencies" "$(extract_info $file "DEPS")"
     printf "$line" "Build Date" "$(extract_info $file "DATE")"
 
-    is_installed $(extract_info $file "NAME") && {
+    is_installed $name && {
         date=$(date -d @$(stat -t $file | cut -d' ' -f13))
         printf "$line" "Install Date" "$date"
+        printf "$line" "Install Size" "$(QUIET=true size_of $name)"
     } || true
 }
  
@@ -100,7 +102,24 @@ info () {
         [ -f $infofile ] && {
             print_info $infofile
         } || {
-            printf "Package info for $package could not be found!"
+            printf "Package info for $package could not be found!\n"
         }
     done
 }
+
+# get the size of a package
+#
+size_of () {
+    local size=0 file=
+    for file in $(files $@); do 
+        $VERBOSE && printf "${BLACK}file $file "
+        [ -f "$file" ] && {
+            set -- $(stat -t $file)
+            $VERBOSE && printf "has size $2"
+            size=$((size+$2))
+        }
+        $VERBOSE && printf "\n"
+    done
+    echo $size
+}
+
