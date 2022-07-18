@@ -1,0 +1,7 @@
+#!/usr/bin/env shmk
+
+LIBS="src/*.sh"
+
+PROGS="
+src/xi.sh
+"

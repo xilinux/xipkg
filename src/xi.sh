@@ -1,5 +1,20 @@
 #!/bin/sh
 
+#include xilib
+#include profile.sh
+#include util.sh
+#include validate.sh
+
+#include query.sh
+#include sync.sh
+#include install.sh
+#include build.sh
+#include get.sh
+#include remove.sh
+#include stats.sh
+#include bootstrap.sh
+#>echo "VERSION=$(git describe --always)"
+
 usage () {
 cat << EOF
 ${LIGHT_WHITE}XiPkg Version $VERSION
@@ -74,13 +89,6 @@ ${RED}Usage: xi [options] command...
 EOF
 }
 
-
-[ -z "${LIBDIR}" ] && LIBDIR=/usr/lib/xipkg
-[ -f "/usr/lib/xilib.sh" ] && . /usr/lib/xilib.sh
-
-[ -f ${LIBDIR}/VERSION ] && VERSION=$(cat ${LIBDIR}/VERSION) || VERSION=
-export VERSION
-
 export SYSROOT=/
 export CONF_FILE="/etc/xipkg.conf"
 export VERBOSE=false
@@ -123,22 +131,9 @@ while getopts ":r:c:qnluyvh" opt; do
     esac
 done
 
-# TODO only load these modules when needed
-. ${LIBDIR}/profile.sh
-. ${LIBDIR}/util.sh
-. ${LIBDIR}/validate.sh
-
-. ${LIBDIR}/query.sh
-. ${LIBDIR}/sync.sh
-. ${LIBDIR}/install.sh
-. ${LIBDIR}/build.sh
-. ${LIBDIR}/get.sh
-. ${LIBDIR}/remove.sh
-
 shift $((OPTIND-1))
 
 if [ "$#" = "0" ]; then
-    . ${LIBDIR}/stats.sh
     show_xipkg_stats
 else 
     case "$1" in
@@ -192,7 +187,6 @@ else
         "clean")
             shift
             checkroot
-            . ${LIBDIR}/remove.sh
             clean $@
             ;;
         "list")
@@ -243,14 +237,12 @@ else
         "bootstrap")
             shift
             checkroot
-            . ${LIBDIR}/bootstrap.sh
             bootstrap $@
             ;;
         "help")
             usage
             ;;
         *)
-
             sudo $0 ${DEFAULT_OPTION:-install} $@
             ;;
     esac
