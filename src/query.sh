@@ -10,14 +10,14 @@ list () {
 # list installed packages
 #
 installed () {
-    ls -1 ${INSTALLED_DIR}
+    ls -1 ${SYSROOT}${INSTALLED_DIR}
 }
 
 # list all packages and lable installed ones
 #
 list_installed () {
     list | while read -r line; do 
-        [ -d ${INSTALLED_DIR}/$line ] \
+        [ -d ${SYSROOT}${INSTALLED_DIR}/$line ] \
             && echo $line "[installed]" \
             || echo $line
     done
@@ -37,7 +37,7 @@ search () {
 #
 files () {
     for package in $@; do
-        local file="${INSTALLED_DIR}/$package/files"
+        local file="${SYSROOT}${INSTALLED_DIR}/$package/files"
         [ -f $file ] && cat $file || >&2 printf "${RED}Package ${LIGHT_RED}$package${RED} is not installed\n"
     done
 }
@@ -49,7 +49,7 @@ file_info () {
         [ ! -f ${SYSROOT}$file ] && file=$(realpath $file 2>/dev/null)
         local found=false
         for pkg in $(installed); do
-            for list in ${INSTALLED_DIR}/$pkg/files; do
+            for list in ${SYSROOT}${INSTALLED_DIR}/$pkg/files; do
                 [ -f $list ] &&  {
                     grep -q "^/usr${file}$" $list || grep -q "^${file}$" $list && {
                         ${QUIET} && echo $pkg || printf "${LIGHT_BLUE}%s${BLUE} belongs to ${LIGHT_BLUE}%s${RESET}\n" $file $pkg
@@ -98,7 +98,7 @@ print_info ()  {
 #
 info () {
     for package in $@; do 
-        infofile=${INSTALLED_DIR}/$package/info
+        infofile=${SYSROOT}${INSTALLED_DIR}/$package/info
         [ -f $infofile ] && {
             print_info $infofile
         } || {
