@@ -49,7 +49,7 @@ get_revision () {
 # return the installed revision of the given package
 #
 get_installed_revision () {
-    local infofile=${INSTALLED_DIR}/$1/info
+    local infofile=${SYSROOT}${INSTALLED_DIR}/$1/info
     [ -f $infofile ] && {
         sed -rn "s/^REVISION=(.*)$/\1/p" $infofile
     }

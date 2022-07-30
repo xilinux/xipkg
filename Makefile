@@ -15,7 +15,7 @@ install-config:
 
 install: build install-config
 	@./build.shmk install
-	ln -sf xipkg ${DESTDIR}${PREFIX}/bin/xi
+	ln -sf xi ${DESTDIR}${PREFIX}/bin/xipkg
 
 clean:
 	@./build.shmk clean

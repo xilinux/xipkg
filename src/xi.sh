@@ -225,7 +225,7 @@ else
             ;;
         "verify")
             shift
-            [ -z "$*" ] && set -- $(ls ${INSTALLED_DIR})
+            [ -z "$*" ] && set -- $(ls ${SYSROOT}${INSTALLED_DIR})
             while [ ! -z "$*" ]; do
                 validate_files $1 || {
                    ${QUIET} && printf "%s\n" $1 || printf "${LIGHT_RED}Failed to verify $1\n"

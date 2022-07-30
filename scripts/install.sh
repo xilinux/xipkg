@@ -1,7 +1,7 @@
 #!/bin/sh
 
 default_packages="base linux-libre xipkg dracut grub bash"
-additional_packages="sudo neofetch vim networkmanager"
+additional_packages="doas neofetch vim networkmanager"
 default_key="davidovski https://xi.davidovski.xyz/keychain/xi.pub"
 
 XIPKG="/usr/bin/xi"

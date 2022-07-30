@@ -1,7 +1,7 @@
 #!/bin/sh
 
-. /usr/lib/colors.sh
-. /usr/lib/glyphs.sh
+#include colors.sh
+#include glyphs.sh
 
 export HBAR_COMPLETE="-c ${GREEN}${BG_DEFAULT}"
 export HBAR_RED="-c ${BLACK}${BG_RED}"
@@ -17,7 +17,7 @@ export REPOS="$(parseconf -v repos)"
 export SOURCES="$(parseconf sources.*)"
 
 export PACKAGES_DIR=$(parseconf -v dir.packages)
-export INSTALLED_DIR=${SYSROOT}$(parseconf -v dir.installed)
+export INSTALLED_DIR=$(parseconf -v dir.installed)
 export KEYCHAIN_DIR=$(parseconf -v dir.keychain)
 
 export CACHE_DIR=$(parseconf -v dir.cache)

@@ -10,7 +10,7 @@ install_package () {
     local name="$2"
     local info_file="$pkg_file.info"
 
-    local installed_dir="${INSTALLED_DIR}/$name"
+    local installed_dir="${SYSROOT}${INSTALLED_DIR}/$name"
     local info="$installed_dir/info"
     local files="$installed_dir/files"
     local checksum="$installed_dir/checksum"
@@ -90,7 +90,7 @@ install () {
     ${VERBOSE} && printf "${BLACK}Requested to install: $@\n${RESET}"
 
     if [ "$#" = "0" ]; then
-        packages=$(ls ${INSTALLED_DIR})
+        packages=$(ls ${SYSROOT}${INSTALLED_DIR})
     fi
 
     local missing=""
@@ -109,8 +109,8 @@ install () {
             ${VERBOSE} && printf "${BLACK}installing $name from $package \n${RESET}"
             install_package $package $name &
 
-            mkdir -p "${INSTALLED_DIR}/$name/"
-            filelist="${INSTALLED_DIR}/$name/files"
+            mkdir -p "${SYSROOT}${INSTALLED_DIR}/$name/"
+            filelist="${SYSROOT}${INSTALLED_DIR}/$name/files"
             touch $filelist
             files_files="$files_files $filelist"
         done

@@ -9,7 +9,7 @@ show_xipkg_stats () {
     local installed=0
     for package in $(list); do
         total=$((total+1))
-        [ -d ${INSTALLED_DIR}/${package} ] &&
+        [ -d ${SYSROOT}${INSTALLED_DIR}/${package} ] &&
             installed=$((installed+1))
     done
 
