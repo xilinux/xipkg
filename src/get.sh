@@ -156,16 +156,17 @@ get () {
         checksum=$2
         size=$3
         
-        if ! is_installed $package; then
+        if is_installed $package; then
+            if [ "$(get_installed_version $package)" = "$checksum" ]; then
+                already="$already $package"
+                continue
+            fi
+        else
             install="$install $package"
             total_download=$((total_download+size))
             continue
         fi
 
-        if [ "$(get_installed_version $package)" = "$checksum" ]; then
-            already="$already $package"
-            continue
-        fi
         update="$update $package"
         total_download=$((total_download+size))
     done

@@ -1,5 +1,7 @@
 #!/usr/bin/env shmk
 
+search_path="src $search_path"
+
 PROGS="
 src/xi.sh
 "

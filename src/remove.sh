@@ -10,7 +10,7 @@ remove () {
     local real=""
 
     for package in $@; do
-        local package_dir="${INSTALLED_DIR}/$package"
+        local package_dir="${SYSROOT}${INSTALLED_DIR}/$package"
         local filesfile="${package_dir}/files"
         if [ -d $package_dir ]; then 
             [ -f $filesfile ] &&

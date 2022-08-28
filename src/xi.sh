@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#include xilib
+#include xilib.sh
 #include profile.sh
 #include util.sh
 #include validate.sh

@@ -1,7 +1,19 @@
 #!/bin/sh
 
+# Download a file and find out the http code
+#
 download_file() {
     curl ${CURL_OPTS} -o $1 -w "%{http_code}" $2 2>> ${LOG_FILE}
+}
+
+
+# Check if the user can write to the selected systemroot
+#
+checkroot () {
+    [ -w "${SYSROOT}" ] || {
+        printf "${RED}Please run as root!${RESET}\n"
+        exit 1
+    }
 }
 
 # this function is broken
