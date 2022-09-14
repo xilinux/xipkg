@@ -8,6 +8,8 @@ export HBAR_RED="-c ${BLACK}${BG_RED}"
 
 export CONF_FILE="/etc/xipkg.conf"
 
+[ ! -f "$CONF_FILE" ] && echo "No config found!" && exit 1
+
 export CURL_OPTS="-sSL"
 
 export DEFAULT_OPTION=$(parseconf -v default_cmd) 

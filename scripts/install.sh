@@ -30,7 +30,9 @@ echo "Please make sure that you have correctly formatted any partitions and moun
 }
 
 $XIPKG $XIFLAGS sync
+mkdir -p $SYSROOT
 $XIPKG $XIFLAGS -r $SYSROOT bootstrap 
+mkdir -p $SYSROOT
 $XIPKG $XIFLAGS -r $SYSROOT install $default_packages
 $XIPKG $XIFLAGS -r $SYSROOT keyimport $default_key
 

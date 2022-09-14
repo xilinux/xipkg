@@ -58,6 +58,7 @@ bootstrap () {
 
     if [ -e ${SYSROOT} ] && [ "$(ls -1 ${SYSROOT})" != "0" ]; then
         if prompt_question "${WHITE}System already exists on ${SYSROOT}, clear?"; then
+            umount -r ${SYSROOT}/*
             rm -rf ${SYSROOT}/*
         fi
     fi
