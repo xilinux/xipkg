@@ -2,7 +2,7 @@
 
 extract () {
     # keep old files here, so we dont overwrite any configs
-    tar -h --keep-old-files -p -vvxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep -v ^d | tr -s " " | cut -d" " -f6 | cut -c2- 
+    tar -h --keep-old-files -p -vvJxf $1 -C ${SYSROOT} 2>${LOG_FILE} | grep -v ^d | tr -s " " | cut -d" " -f6 | cut -c2- 
 }
 
 install_package () {
@@ -22,10 +22,10 @@ install_package () {
         [ ! -d $installed_dir ] && mkdir -p "$installed_dir"
 
         [ -f "$files" ] && {
-            for file in $(cat $files); do
+            for read -r file; do
                 [ -z "${file%%/etc*}" ] || 
                     rm -f ${SYSROOT}$file
-            done
+            done < $files
             rm $files
         }
 
